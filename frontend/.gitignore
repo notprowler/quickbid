@@ -1,0 +1,38 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules/
+
+# Build output
+dist/
+.vite/
+
+# Environment files
+.env
+.env.local
+
+# Editor files
+.vscode/
+.idea/
+.DS_Store
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# System files (macOS/Windows)
+._*
+Thumbs.db
+
+# Lint and formatting caches
+.eslintcache
+.prettiercache
+
+# Tailwind CSS and config files
+tailwind.config.ts
+postcss.config.js
