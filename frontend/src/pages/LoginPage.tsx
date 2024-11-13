@@ -1,6 +1,9 @@
+import { useAuth0 } from "@auth0/auth0-react";
 import styles from "./LoginPage.module.css";
 
-function LoginPage() {
+export default function LoginPage() {
+  const { loginWithRedirect } = useAuth0();
+
   return (
     <div className={styles.container}>
       {/* Left Image Side */}
@@ -14,69 +17,30 @@ function LoginPage() {
 
       {/* Right Form Side */}
       <div className={styles.formContainer}>
-        <h2 className={styles.title}>Welcome back!</h2>
+        <h2 className={styles.title}>Welcome!</h2>
 
-        <form className={styles.form}>
-          <div className={styles.inputGroup}>
-            <label htmlFor="name" className={styles.label}>
-              Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              placeholder="Enter your name"
-              className={styles.input}
-            />
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label htmlFor="email" className={styles.label}>
-              Email address
-            </label>
-            <input
-              type="email"
-              id="email"
-              placeholder="Enter your email"
-              className={styles.input}
-            />
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label htmlFor="password" className={styles.label}>
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              placeholder="Enter your password"
-              className={styles.input}
-            />
-          </div>
-
-          <div className={styles.checkboxContainer}>
-            <input type="checkbox" id="terms" className={styles.checkbox} />
-            <label htmlFor="terms" className={styles.checkboxLabel}>
-              I agree to the{" "}
-              <a href="#" className={styles.link}>
-                terms & policy
-              </a>
-            </label>
-          </div>
-
-          <button type="submit" className={styles.button}>
-            Login
+        <div className={styles.form}>
+          {/* Login Button */}
+          <button
+            type="button"
+            className={styles.button}
+            onClick={() => loginWithRedirect()}
+          >
+            Sign in
           </button>
-        </form>
+        </div>
 
         <p className={styles.signInText}>
-          Have an account?{" "}
-          <a href="#" className={styles.signInLink}>
-            Sign In
+          Don't have an account?{" "}
+          <a
+            href="#"
+            className={styles.signInLink}
+            onClick={() => loginWithRedirect()}
+          >
+            Sign Up
           </a>
         </p>
       </div>
     </div>
   );
 }
-
-export default LoginPage;
