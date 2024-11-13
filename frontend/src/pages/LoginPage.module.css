@@ -113,3 +113,9 @@ body {
   color: #0070f3;
   text-decoration: underline;
 }
+
+.loggedin {
+  display: flex;
+  justify-content: center;
+  font-size: xx-large;
+}
