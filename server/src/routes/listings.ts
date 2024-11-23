@@ -1,5 +1,5 @@
 import express from 'express'
-import listingsController from '@/controllers/listings'
+import listingsController from '@/controllers/listings.controller'
 const router = express.Router()
 
 router.get('/', listingsController.getListings);

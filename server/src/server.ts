@@ -1,6 +1,7 @@
 import express, { Application, Request, Response } from "express";
 import 'dotenv';
-import listingsRoutes from './routes/listings';
+import listingsRoutes from '@/routes/listings';
+import usersRoutes from '@/routes/users'; 
 
 const app: Application = express();
 const PORT = process.env.SERVER_PORT || 3000;
@@ -14,3 +15,4 @@ app.listen(PORT, () => {
 });
 
 app.use('/api/listings', listingsRoutes);
+app.use('/api/users', usersRoutes);
