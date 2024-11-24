@@ -34,6 +34,95 @@ export type Database = {
   }
   public: {
     Tables: {
+      bids: {
+        Row: {
+          bid_amount: number
+          bid_deadline: string | null
+          bid_id: number
+          bid_status: Database["public"]["Enums"]["bid_status"]
+          bidder_id: number
+          created_at: string
+          item_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          bid_amount: number
+          bid_deadline?: string | null
+          bid_id?: number
+          bid_status: Database["public"]["Enums"]["bid_status"]
+          bidder_id: number
+          created_at?: string
+          item_id: number
+          updated_at?: string | null
+        }
+        Update: {
+          bid_amount?: number
+          bid_deadline?: string | null
+          bid_id?: number
+          bid_status?: Database["public"]["Enums"]["bid_status"]
+          bidder_id?: number
+          created_at?: string
+          item_id?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bids_bidder_id_fkey"
+            columns: ["bidder_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "bids_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["item_id"]
+          },
+        ]
+      }
+      items: {
+        Row: {
+          created_at: string
+          description: string | null
+          item_id: number
+          owner_id: number
+          price: number
+          status: Database["public"]["Enums"]["status"]
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          item_id?: number
+          owner_id: number
+          price: number
+          status: Database["public"]["Enums"]["status"]
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          item_id?: number
+          owner_id?: number
+          price?: number
+          status?: Database["public"]["Enums"]["status"]
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           created_at: string
@@ -119,7 +208,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      bid_status: "pending" | "accepted" | "rejected"
+      status: "available" | "sold" | "rented"
     }
     CompositeTypes: {
       [_ in never]: never
