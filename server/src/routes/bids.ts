@@ -2,9 +2,9 @@ import express from 'express'
 import bidsController from '@/controllers/bidsController';
 const router = express.Router();
 
-router.post('/:{productID}', bidsController.newBid);
-router.get('/:{productID}', bidsController.retrieveAllBids);
-router.put('/:{productID}/accept', bidsController.bidAccepted);
-router.put('/:{productID}/reject', bidsController.bidRejected);
+router.post('/:itemID', bidsController.newBid);
+router.get('/:itemID', bidsController.retrieveAllBids);
+router.put('/accept/:itemID', bidsController.bidAccepted);
+router.put('/reject/:itemID', bidsController.bidRejected);
 
 export default router
