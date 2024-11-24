@@ -37,7 +37,7 @@ export type Database = {
       bids: {
         Row: {
           bid_amount: number
-          bid_deadline: string | null
+          bid_deadline: string
           bid_id: number
           bid_status: Database["public"]["Enums"]["bid_status"]
           bidder_id: number
@@ -47,7 +47,7 @@ export type Database = {
         }
         Insert: {
           bid_amount: number
-          bid_deadline?: string | null
+          bid_deadline: string
           bid_id?: number
           bid_status: Database["public"]["Enums"]["bid_status"]
           bidder_id: number
@@ -57,7 +57,7 @@ export type Database = {
         }
         Update: {
           bid_amount?: number
-          bid_deadline?: string | null
+          bid_deadline?: string
           bid_id?: number
           bid_status?: Database["public"]["Enums"]["bid_status"]
           bidder_id?: number
