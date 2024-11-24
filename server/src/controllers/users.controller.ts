@@ -20,9 +20,11 @@ const getUser: RequestHandler = async (req: Request, res: Response) => {
         res.status(200).json(data);
     } catch (e) {
         if (e instanceof Error) {
-            res.status(500).json({ exception: `${e.message}, returning empty data for user`, data: {} });
+            res.status(500).json({ error: `${e.message}, returning empty data for user`, data: {} });
+        } else if (typeof e === 'object' && e !== null && 'message' in e) {
+            res.status(500).json({ error: `${e.message}` });
         } else {
-            res.status(500).json({ exception: 'Unknown error, returning empty data for user', data: {} });
+            res.status(500).json({ error: 'Unknown error, returning empty data for user', data: {} });
         }
     }
 }
@@ -48,9 +50,11 @@ const updateUser: RequestHandler = async (req: Request, res: Response) => {
         res.status(200).json(data);
     } catch (e) {
         if (e instanceof Error) {
-            res.status(500).json({ exception: `${e.message}` });
+            res.status(500).json({ error: `${e.message}` });
+        } else if (typeof e === 'object' && e !== null && 'message' in e) {
+            res.status(500).json({ error: `${e.message}` });
         } else {
-            res.status(500).json({ exception: 'Unknown error updating user information' });
+            res.status(500).json({ error: 'Unknown error updating user information' });
         }
     }
 };
@@ -74,9 +78,11 @@ const deleteUser: RequestHandler = async (req: Request, res: Response) => {
         res.status(200).json(data);
     } catch (e) {
         if (e instanceof Error) {
-            res.status(500).json({ exception: `${e.message}` });
+            res.status(500).json({ error: `${e.message}` });
+        } else if (typeof e === 'object' && e !== null && 'message' in e) {
+            res.status(500).json({ error: `${e.message}` });
         } else {
-            res.status(500).json({ exception: 'Unknown error deleting user' });
+            res.status(500).json({ error: 'Unknown error deleting user' });
         }
     }
 };
@@ -102,9 +108,11 @@ const updateUserStatus: RequestHandler = async (req: Request, res: Response) => 
         res.status(200).json(data);
     } catch (e) {
         if (e instanceof Error) {
-            res.status(500).json({ exception: `${e.message}` });
+            res.status(500).json({ error: `${e.message}` });
+        } else if (typeof e === 'object' && e !== null && 'message' in e) {
+            res.status(500).json({ error: `${e.message}` });
         } else {
-            res.status(500).json({ exception: 'Unknown error updating user status' });
+            res.status(500).json({ error: 'Unknown error updating user status' });
         }
     }
 };
