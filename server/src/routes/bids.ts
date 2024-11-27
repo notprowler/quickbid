@@ -1,5 +1,5 @@
 import express from 'express'
-import bidsController from '@/controllers/bidsController';
+import bidsController from '@/controllers/bids.Controller';
 const router = express.Router();
 
 router.post('/:itemID', bidsController.newBid);
