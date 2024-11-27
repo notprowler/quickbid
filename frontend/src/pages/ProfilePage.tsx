@@ -2,6 +2,8 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useState } from "react";
 import TestImage from "../assets/cutedog.jpg";
 import EditProfile from "../components/EditProfile";
+import AddFunds from "../components/AddFunds";
+import axios from "axios";
 
 interface UserData {
   name: string;
@@ -27,14 +29,15 @@ export default function ProfilePage() {
   const [showListings, setShowListings] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
-  // Mock data
+  const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData>({
     name: user?.name || "John Doe",
     email: user?.email || "john.doe@example.com",
     username: user?.nickname || "john_doe",
     profilePicture: user?.picture || "",
     vipStatus: true,
-    balance: 6500.0,
+    balance: 0,
     ratings: { average: 4.5, count: 10 },
     listings: [
       { id: 1, title: "Vintage Bike", price: 120, sold: false },
@@ -49,6 +52,32 @@ export default function ProfilePage() {
       ...prevData,
       ...updatedData,
     }));
+  };
+
+  // function to get the clientSecret
+  const handleOpenAddFunds = async (amount: number) => {
+    try {
+      // call backend to make payment intent
+      const response = await axios.post(
+        "http://localhost:4000/create-payment-intent",
+        {
+          amount: amount * 100, // need amount in cents
+        },
+      );
+
+      setClientSecret(response.data.clientSecret);
+      setIsAddFundsOpen(true);
+    } catch (error) {
+      console.error("Failed to create payment intent: ", error);
+    }
+  };
+
+  const handlePaymentSuccess = (amount: number) => {
+    setUserData((prevData) => ({
+      ...prevData,
+      balance: prevData.balance + amount,
+    }));
+    console.log("added funds:", amount);
   };
 
   if (!isAuthenticated) {
@@ -108,7 +137,11 @@ export default function ProfilePage() {
             >
               Edit Profile
             </button>
-            <button className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200">
+
+            <button
+              onClick={() => handleOpenAddFunds(10)}
+              className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+            >
               Add Funds
             </button>
           </div>
@@ -172,6 +205,13 @@ export default function ProfilePage() {
         onClose={() => setIsEditProfileOpen(false)}
         userData={userData}
         onUpdate={handleProfileUpdate}
+      />
+
+      <AddFunds
+        isOpen={isAddFundsOpen}
+        onClose={() => setIsAddFundsOpen(false)}
+        clientSecret={clientSecret}
+        onPaymentSuccess={handlePaymentSuccess}
       />
 
       {/* Logout Button */}
