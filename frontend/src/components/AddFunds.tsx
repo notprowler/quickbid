@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 
 interface AddFundsProps {
@@ -6,6 +6,7 @@ interface AddFundsProps {
   onClose: () => void;
   clientSecret: string | null;
   onPaymentSuccess: (amount: number) => void;
+  onRequestPayment: (amount: number) => void;
 }
 
 const AddFunds: React.FC<AddFundsProps> = ({
@@ -13,6 +14,7 @@ const AddFunds: React.FC<AddFundsProps> = ({
   onClose,
   clientSecret,
   onPaymentSuccess,
+  onRequestPayment,
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -20,9 +22,16 @@ const AddFunds: React.FC<AddFundsProps> = ({
   const [amount, setAmount] = useState<string>("");
   const [message, setMessage] = useState("");
 
-  const handlePayment = async () => {
+  // Automatically proceed when clientSecret becomes available
+  useEffect(() => {
+    if (clientSecret) {
+      processPayment();
+    }
+  }, [clientSecret]);
+
+  const processPayment = async () => {
     if (!stripe || !elements || !clientSecret) {
-      setMessage("stripe is not loaded or missing clientSecret.");
+      setMessage("Stripe is not loaded or missing clientSecret.");
       return;
     }
 
@@ -37,23 +46,34 @@ const AddFunds: React.FC<AddFundsProps> = ({
 
       if (result.error) {
         setMessage(result.error.message || "Payment failed.");
-      } else if (
-        result.paymentIntent &&
-        result.paymentIntent.status === "succeeded"
-      ) {
-        setMessage("Payment successful!");
+      } else if (result.paymentIntent?.status === "succeeded") {
         onPaymentSuccess(Number(amount));
+        setMessage("Payment successful!");
         setTimeout(handleAddFundsClose, 1000);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error during payment:", error);
       setMessage("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // confirm amount is numeric
+  const handlePayment = async () => {
+    const numericAmount = Number(amount);
+
+    if (!isValidAmount() || numericAmount <= 0) {
+      setMessage("Please enter a valid amount.");
+      return;
+    }
+
+    if (!clientSecret) {
+      // Request clientSecret dynamically
+      onRequestPayment(numericAmount);
+      setMessage("Fetching payment details. Please wait...");
+    }
+  };
+
   const isValidAmount = () => {
     const value = Number(amount);
     return value > 0 && !isNaN(value);
@@ -70,7 +90,6 @@ const AddFunds: React.FC<AddFundsProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="w-3/12 rounded-lg bg-white p-6 shadow-lg">
-        {" "}
         <h2 className="mb-4 text-xl font-bold">Add Funds</h2>
         <div className="mb-4 flex items-center rounded border p-2">
           <span className="mr-2 text-gray-500">$</span>

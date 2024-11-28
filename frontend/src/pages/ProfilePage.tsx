@@ -139,7 +139,7 @@ export default function ProfilePage() {
             </button>
 
             <button
-              onClick={() => handleOpenAddFunds(10)}
+              onClick={() => setIsAddFundsOpen(true)}
               className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
             >
               Add Funds
@@ -209,9 +209,13 @@ export default function ProfilePage() {
 
       <AddFunds
         isOpen={isAddFundsOpen}
-        onClose={() => setIsAddFundsOpen(false)}
+        onClose={() => {
+          setIsAddFundsOpen(false);
+          setClientSecret(null); // Reset clientSecret for the next transaction
+        }}
         clientSecret={clientSecret}
         onPaymentSuccess={handlePaymentSuccess}
+        onRequestPayment={handleOpenAddFunds}
       />
 
       {/* Logout Button */}
