@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute.tsx";
-import LoginPage from "./pages/LoginPage.tsx";
+import SigninPage from "./pages/SigninPage.tsx";
 import ErrorPage from "./pages/ErrorPage.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
 
@@ -32,7 +32,7 @@ function App() {
         </Route>
 
         <Route element={<NoNavbarLayout />}>
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login" element={<SigninPage />} />
         </Route>
       </Routes>
     </Router>
