@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
-  const { user, isAuthenticated } = useAuth0();
+  const { user, isAuthenticated, loginWithRedirect, isLoading } = useAuth0();
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [cartCount, setCartCount] = useState<number>(0);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
@@ -23,6 +23,7 @@ export default function Navbar() {
   };
 
   const handleAvatarClick = () => {
+    if (isLoading) return; // Wait for the authentication state to load
     if (isAuthenticated) {
       navigate("/profile");
     } else {
@@ -35,7 +36,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="font-imprima flex items-center justify-between border-b-2 border-solid border-black px-6 py-4">
+    <nav className="flex items-center justify-between border-b-2 border-solid px-6 py-4 font-imprima">
       <a href="/" className="rounded-lg px-2 py-1 text-2xl underline">
         QuickBid
       </a>
@@ -43,28 +44,10 @@ export default function Navbar() {
       {/* menu layout for larger screens */}
       <div className="hidden space-x-6 text-xl md:flex">
         <a
-          href="#home"
+          href="/"
           className="rounded-lg px-2 py-1 transition duration-200 ease-in-out hover:bg-gray-300"
         >
-          Home
-        </a>
-        <a
-          href="#categories"
-          className="rounded-lg px-2 py-1 transition duration-200 ease-in-out hover:bg-gray-300"
-        >
-          Categories
-        </a>
-        <a
-          href="#about"
-          className="rounded-lg px-2 py-1 transition duration-200 ease-in-out hover:bg-gray-300"
-        >
-          About
-        </a>
-        <a
-          href="#contact"
-          className="rounded-lg px-2 py-1 transition duration-200 ease-in-out hover:bg-gray-300"
-        >
-          Contact
+          Listings
         </a>
       </div>
 
@@ -73,32 +56,11 @@ export default function Navbar() {
         <div className="absolute left-0 top-16 w-full bg-white shadow-lg md:hidden">
           <div className="flex flex-col items-center space-y-4 py-4">
             <a
-              href="#home"
+              href="/"
               className="w-fit rounded-lg px-2 py-1 text-xl transition duration-200 ease-in-out hover:bg-gray-300"
               onClick={toggleMenu}
             >
-              Home
-            </a>
-            <a
-              href="#categories"
-              className="w-fit rounded-lg px-2 py-1 text-xl transition duration-200 ease-in-out hover:bg-gray-300"
-              onClick={toggleMenu}
-            >
-              Categories
-            </a>
-            <a
-              href="#about"
-              className="w-fit rounded-lg px-2 py-1 text-xl transition duration-200 ease-in-out hover:bg-gray-300"
-              onClick={toggleMenu}
-            >
-              About
-            </a>
-            <a
-              href="#contact"
-              className="w-fit rounded-lg px-2 py-1 text-xl transition duration-200 ease-in-out hover:bg-gray-300"
-              onClick={toggleMenu}
-            >
-              Contact
+              Listings
             </a>
           </div>
         </div>
@@ -134,7 +96,7 @@ export default function Navbar() {
             <img
               src={userAvatar}
               alt="User Avatar"
-              className="h-full w-full rounded-full object-cover"
+              className="border-solid-2 h-full w-full rounded-full border object-cover"
             />
           ) : (
             <FaUser className="text-2xl" />

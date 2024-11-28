@@ -1,4 +1,3 @@
-import React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 
 export default function Profile() {
@@ -14,7 +13,7 @@ export default function Profile() {
       <img
         src={user?.picture}
         alt="Profile"
-        className="w-16 h-16 rounded-full"
+        className="h-16 w-16 rounded-full"
       />
     </div>
   );
