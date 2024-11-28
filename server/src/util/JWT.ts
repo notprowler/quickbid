@@ -50,9 +50,9 @@ const generateAccessToken = (password: string) => {
       return `Error while checking the database: ${ usernameError?.message || emailError?.message }`;
     }
   
-    if (usernameData) {
+    if (usernameData.length > 0) {
       return "Username is already taken.";
-    } else if (emailData) {
+    } else if (emailData.length > 0) {
       return "Email is already registered.";
     } else {
       return "Username and Email are available.";
