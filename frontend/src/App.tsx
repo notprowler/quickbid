@@ -13,7 +13,16 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="*" element={<ErrorPage />} />
         </Route>
-
+      <Routes>
+        <Route 
+          path="/list" 
+          element={
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: 2 }}>
+              <Listings />
+            </Box>
+          } 
+        />
+      </Routes>
         <Route element={<NoNavbarLayout />}>
           <Route path="/login" element={<LoginPage />} />
         </Route>
