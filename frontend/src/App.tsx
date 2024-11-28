@@ -4,6 +4,7 @@ import LoginPage from "./pages/LoginPage.tsx";
 import ErrorPage from "./pages/ErrorPage.tsx";
 import MainLayout from "./layouts/MainLayout.tsx";
 import NoNavbarLayout from "./layouts/NoNavbarLayout.tsx";
+import LandingPage from "./pages/LandingPage/LandingPage.tsx"; // Import the LandingPage component
 
 function App() {
   return (
@@ -17,6 +18,8 @@ function App() {
         <Route element={<NoNavbarLayout />}>
           <Route path="/login" element={<LoginPage />} />
         </Route>
+
+        <Route path="/landing" element={<LandingPage />} /> 
       </Routes>
     </Router>
   );
