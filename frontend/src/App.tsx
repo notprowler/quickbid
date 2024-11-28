@@ -4,6 +4,7 @@ import LoginPage from "./pages/LoginPage.tsx";
 import ErrorPage from "./pages/ErrorPage.tsx";
 import MainLayout from "./layouts/MainLayout.tsx";
 import NoNavbarLayout from "./layouts/NoNavbarLayout.tsx";
+import Listings from './pages/Listings.jsx';
 
 function App() {
   return (
