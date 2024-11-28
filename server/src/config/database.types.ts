@@ -77,49 +77,8 @@ export type Database = {
             foreignKeyName: "bids_item_id_fkey"
             columns: ["item_id"]
             isOneToOne: false
-            referencedRelation: "items"
+            referencedRelation: "listings"
             referencedColumns: ["item_id"]
-          },
-        ]
-      }
-      items: {
-        Row: {
-          created_at: string
-          description: string | null
-          item_id: number
-          owner_id: number
-          price: number
-          status: Database["public"]["Enums"]["status"]
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          item_id?: number
-          owner_id: number
-          price: number
-          status: Database["public"]["Enums"]["status"]
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          item_id?: number
-          owner_id?: number
-          price?: number
-          status?: Database["public"]["Enums"]["status"]
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "items_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -171,6 +130,7 @@ export type Database = {
           created_at: string
           email: string
           password_hash: string
+          role: string
           status: string
           user_id: number
           username: string
@@ -182,6 +142,7 @@ export type Database = {
           created_at?: string
           email: string
           password_hash: string
+          role?: string
           status?: string
           user_id?: number
           username: string
@@ -193,6 +154,7 @@ export type Database = {
           created_at?: string
           email?: string
           password_hash?: string
+          role?: string
           status?: string
           user_id?: number
           username?: string
