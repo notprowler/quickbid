@@ -77,49 +77,8 @@ export type Database = {
             foreignKeyName: "bids_item_id_fkey"
             columns: ["item_id"]
             isOneToOne: false
-            referencedRelation: "items"
+            referencedRelation: "listings"
             referencedColumns: ["item_id"]
-          },
-        ]
-      }
-      items: {
-        Row: {
-          created_at: string
-          description: string | null
-          item_id: number
-          owner_id: number
-          price: number
-          status: Database["public"]["Enums"]["status"]
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          item_id?: number
-          owner_id: number
-          price: number
-          status: Database["public"]["Enums"]["status"]
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          item_id?: number
-          owner_id?: number
-          price?: number
-          status?: Database["public"]["Enums"]["status"]
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "items_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -164,6 +123,61 @@ export type Database = {
           },
         ]
       }
+      transactions: {
+        Row: {
+          buyer_id: number
+          created_at: string
+          discount_applied: boolean
+          item_id: number
+          seller_id: number
+          transaction_amount: number
+          transaction_date: string
+          transaction_id: number
+        }
+        Insert: {
+          buyer_id: number
+          created_at?: string
+          discount_applied: boolean
+          item_id: number
+          seller_id: number
+          transaction_amount: number
+          transaction_date?: string
+          transaction_id?: number
+        }
+        Update: {
+          buyer_id?: number
+          created_at?: string
+          discount_applied?: boolean
+          item_id?: number
+          seller_id?: number
+          transaction_amount?: number
+          transaction_date?: string
+          transaction_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "transactions_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "transactions_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       users: {
         Row: {
           Address: string
@@ -171,6 +185,8 @@ export type Database = {
           created_at: string
           email: string
           password_hash: string
+          rating: number | null
+          role: string
           status: string
           user_id: number
           username: string
@@ -182,6 +198,8 @@ export type Database = {
           created_at?: string
           email: string
           password_hash: string
+          rating?: number | null
+          role?: string
           status?: string
           user_id?: number
           username: string
@@ -193,6 +211,8 @@ export type Database = {
           created_at?: string
           email?: string
           password_hash?: string
+          rating?: number | null
+          role?: string
           status?: string
           user_id?: number
           username?: string
@@ -210,6 +230,7 @@ export type Database = {
     Enums: {
       bid_status: "pending" | "accepted" | "rejected"
       status: "available" | "sold" | "rented"
+      user_rating: "1" | "2" | "3" | "4" | "5"
     }
     CompositeTypes: {
       [_ in never]: never
