@@ -2,6 +2,8 @@ import express, { Application, Request, Response } from "express";
 import "dotenv";
 import cors from "cors";
 import Stripe from "stripe";
+// @ts-ignore
+import cookieParser from "cookie-parser"
 import listingsRoutes from "@/routes/listings";
 import usersRoutes from "@/routes/users";
 import bidRouter from "@/routes/bids";
@@ -13,7 +15,13 @@ import authRouter from "@/routes/auth";
 const app: Application = express();
 const PORT = process.env.SERVER_PORT || 3000;
 
-app.use(cors())
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: 'GET,POST,PUT,DELETE,PATCH',
+  credentials: true
+}));
+
+app.use(cookieParser());
 app.use(express.json());
 
 app.get("/", (req: Request, res: Response) => {

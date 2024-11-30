@@ -1,6 +1,7 @@
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 import express, {Request, Response, NextFunction} from "express";
 import supabase from "@/config/database";
+import { AuthenticatedUser } from "@/types"; // Import the AuthenticatedUser type
 
 // Used by @notprowler - generating the TOKEN_SECRET in env
 // import crypto from "crypto";
@@ -60,7 +61,7 @@ const generateAccessToken = (password: string) => {
   };
   
 export {
-    checkUserExistence,
-    generateAccessToken,
-    validateAccessToken
+  checkUserExistence,
+  generateAccessToken,
+  validateAccessToken
 }

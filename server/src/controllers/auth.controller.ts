@@ -58,9 +58,12 @@ const loginUser = async (req: Request, res: Response): Promise<Response | void> 
     return res.status(400).json({ error: "User Doesn't Exist" });
   }
 
-  if (!user) res.status(400).json({ error: "User Doesn't Exist" });
+  if (!user || user.length === 0) {
+    return res.status(400).json({ error: "User Doesn't Exist" });
+  }
 
-  const dbPassword = user[0]?.password_hash;
+  const userData = user[0];
+  const dbPassword = userData?.password_hash;
 
   if (!dbPassword) {
     return res.status(400).json({ error: "Error retrieving password hash" });
