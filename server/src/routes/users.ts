@@ -1,6 +1,6 @@
 
 import express from 'express';
-import { getUser, updateUser, updateUserStatus, deleteUser } from '@/controllers/users.controller';
+import { getUser, updateUser, updateUserStatus, deleteUser, updateUserRating } from '@/controllers/users.controller';
 
 const router = express.Router();
 
@@ -8,6 +8,7 @@ router.get('/:id', getUser)
 router.put('/:id', updateUser)
 router.delete('/:id', deleteUser)
 router.put('/status/:id', updateUserStatus)
+router.put('/rating/:id', updateUserRating)
 
 export default router 
 
