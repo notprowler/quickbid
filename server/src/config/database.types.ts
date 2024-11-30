@@ -123,6 +123,47 @@ export type Database = {
           },
         ]
       }
+      ratings: {
+        Row: {
+          created_at: string
+          five_ratings: number | null
+          four_ratings: number | null
+          one_ratings: number | null
+          ratings_id: number
+          three_ratings: number | null
+          two_ratings: number | null
+          user_id: number | null
+        }
+        Insert: {
+          created_at?: string
+          five_ratings?: number | null
+          four_ratings?: number | null
+          one_ratings?: number | null
+          ratings_id?: number
+          three_ratings?: number | null
+          two_ratings?: number | null
+          user_id?: number | null
+        }
+        Update: {
+          created_at?: string
+          five_ratings?: number | null
+          four_ratings?: number | null
+          one_ratings?: number | null
+          ratings_id?: number
+          three_ratings?: number | null
+          two_ratings?: number | null
+          user_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ratings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           buyer_id: number
@@ -181,11 +222,11 @@ export type Database = {
       users: {
         Row: {
           Address: string
+          average_rating: Database["public"]["Enums"]["user_rating"] | null
           balance: number
           created_at: string
           email: string
           password_hash: string
-          rating: number | null
           role: string
           status: string
           user_id: number
@@ -194,11 +235,11 @@ export type Database = {
         }
         Insert: {
           Address: string
+          average_rating?: Database["public"]["Enums"]["user_rating"] | null
           balance?: number
           created_at?: string
           email: string
           password_hash: string
-          rating?: number | null
           role?: string
           status?: string
           user_id?: number
@@ -207,11 +248,11 @@ export type Database = {
         }
         Update: {
           Address?: string
+          average_rating?: Database["public"]["Enums"]["user_rating"] | null
           balance?: number
           created_at?: string
           email?: string
           password_hash?: string
-          rating?: number | null
           role?: string
           status?: string
           user_id?: number
@@ -225,7 +266,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_rating: {
+        Args: {
+          column_name: string
+          user_id: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       bid_status: "pending" | "accepted" | "rejected"
