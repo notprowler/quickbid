@@ -1,11 +1,32 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import loginImage from "../assets/loginImage.jpg";
+import { generateQuestion } from "../../utils/generateQuestion.js";
+import { useState } from "react";
+import QuestionModal from "./QuestionModal.js";
+import Chatbot from "../components/ChatBot.js";
 
 export default function LoginPage() {
   const { loginWithRedirect } = useAuth0();
+  const { question, answer } = generateQuestion();
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+  const handleOnClose = () => {
+    setIsModalOpen(!isModalOpen);
+  };
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  };
+
+  const handleSumbit = () => {
+    alert("Submitted");
+    loginWithRedirect();
+    setIsModalOpen(!false);
+  };
 
   return (
     <div className="flex h-screen">
+      {/* <Chatbot /> */}
+
       {/* Left Image Side */}
       <div className="relative w-1/2 overflow-hidden shadow-[5px_0_18px_rgba(0,0,0,0.3)]">
         <img
@@ -24,7 +45,7 @@ export default function LoginPage() {
           <button
             type="button"
             className="w-full rounded-lg bg-[#3a5b22] px-4 py-3 font-semibold text-white transition hover:bg-[#034605]"
-            onClick={() => loginWithRedirect()}
+            onClick={toggleModal}
           >
             Sign in
           </button>
@@ -41,6 +62,14 @@ export default function LoginPage() {
           </a>
         </p>
       </div>
+      {isModalOpen && (
+        <QuestionModal
+          question={question}
+          correctAnswer={answer}
+          onClose={handleOnClose}
+          onCorrectAnswer={handleSumbit}
+        />
+      )}
     </div>
   );
 }
