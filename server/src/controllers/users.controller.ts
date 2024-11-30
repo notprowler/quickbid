@@ -131,7 +131,7 @@ const updateAverageRating: (userRatings: any) => Promise<void> = async (userRati
 
 const updateUserRating: RequestHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { rating, comment } = req.body;
+    const { rating } = req.body;
 
     if (!id) {
         res.status(400).json({ error: 'Please provide a User ID' });
@@ -174,4 +174,41 @@ const updateUserRating: RequestHandler = async (req: Request, res: Response) => 
     }
 }
 
-export { getUser, updateUser, deleteUser, updateUserStatus, updateUserRating };
+const newUserComment: RequestHandler = async (req:Request, res: Response) => {
+    const { id } = req.params;
+    const { comment } = req.body;
+
+    if (!id) {
+        res.status(400).json({ error: 'Please provide a User ID' });
+        return;
+    }
+
+    try {
+        const { data, error } = await supabase
+        .from('comments')
+        .insert([{
+            comment, 
+            user_id: parseInt(id, 10)
+        }])
+        .select();
+
+        if (error) throw error;
+
+        if (!data) {
+            res.status(500).json({ error: 'Error updating row' });
+            return;
+        }
+        res.status(200).send(data);
+    } catch (e) {
+        if (e instanceof Error) {
+            res.status(500).json({ error: `${e.message}` });
+        } else if (typeof e == 'object' && e !== null && 'message' in e) {
+            res.status(500).json({ error: `${e.message}` });
+        }
+    }
+
+
+
+}
+
+export { getUser, updateUser, deleteUser, updateUserStatus, updateUserRating, newUserComment };

@@ -40,6 +40,20 @@ export default function Rating({buyer, seller, user}: RateProps) {
             if (!res.ok) {
                 throw new Error(`HTTP status: ${res.status}`);
             }
+
+            const res2 = await fetch(`http://localhost:3000/api/users/comment/${user == buyer ? seller : buyer}`, {
+                method: "POST",
+                headers: {
+                    'content-type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "comment": comment
+                }),
+            });
+    
+            if (!res2.ok) {
+                throw new Error(`HTTP status for second request: ${res2.status}`);
+            }
         } catch (e) {
             if (e instanceof Error) {
                 console.log(`Error: ${e.message}`);
