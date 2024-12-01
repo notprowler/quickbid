@@ -3,6 +3,8 @@ import 'dotenv';
 import listingsRoutes from '@/routes/listings';
 import usersRoutes from '@/routes/users'; 
 import bidRouter from '@/routes/bids';
+import transactionsRouter from '@/routes/transactions';
+import transactionsController from "./controllers/transactions.Controller";
 
 const app: Application = express();
 const PORT = process.env.SERVER_PORT || 3000;
@@ -21,3 +23,4 @@ app.listen(PORT, () => {
 app.use('/api/listings', listingsRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/bids', bidRouter);
+app.use('/api/transactions', transactionsRouter);
