@@ -13,7 +13,7 @@ const SummaryOrder: React.FC<SummaryOrderProps> = ({ subtotal }) => {
         <Typography variant="body1" sx={{ textAlign: 'left' }}>Sum Total</Typography>
         <Typography variant="body1" sx={{ textAlign: 'left', marginLeft: '5px' }}>${subtotal}</Typography>
       </Box>
-      <Button variant="contained" sx={{ backgroundColor: 'black', color: 'white', borderRadius: '16px' }} fullWidth>Buy</Button>
+      <Button variant="contained" sx={{ backgroundColor: 'green', color: 'white', borderRadius: '16px' }} fullWidth>Bid</Button>
     </Box>
   );
 };

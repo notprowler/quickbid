@@ -41,7 +41,7 @@ const SelectItems: React.FC<SelectItemsProps> = ({ isAllSelected, onSelectAll, o
         variant="contained"
         color="primary"
         onClick={onDelete}
-        sx={{ backgroundColor: "black", color: "white" }}
+        sx={{ backgroundColor: "green", color: "white" }}
       >
         Delete Selected
       </Button>
