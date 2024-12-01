@@ -1,22 +1,22 @@
 import { FaUser, FaShoppingCart, FaTimes, FaBars } from "react-icons/fa";
-import { useAuth0 } from "@auth0/auth0-react";
+// import { useAuth0 } from "@auth0/auth0-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
-  const { user, isAuthenticated, loginWithRedirect, isLoading } = useAuth0();
+  // const { user, isAuthenticated, loginWithRedirect, isLoading } = useAuth0();
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [cartCount, setCartCount] = useState<number>(0);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (isAuthenticated && user?.picture) {
-      setUserAvatar(user.picture);
-    } else {
-      setUserAvatar(null);
-    }
-  }, [isAuthenticated, user]);
+  // useEffect(() => {
+  //   if (isAuthenticated && user?.picture) {
+  //     setUserAvatar(user.picture);
+  //   } else {
+  //     setUserAvatar(null);
+  //   }
+  // }, [isAuthenticated, user]);
 
   const handleCartClick = () => {
     navigate("/cart");
@@ -44,7 +44,7 @@ export default function Navbar() {
       {/* menu layout for larger screens */}
       <div className="hidden space-x-6 text-xl md:flex">
         <a
-          href="/"
+          href="/listings"
           className="rounded-lg px-2 py-1 transition duration-200 ease-in-out hover:bg-gray-300"
         >
           Listings
