@@ -1,8 +1,10 @@
-import { useAuth0 } from "@auth0/auth0-react";
 import loginImage from "../assets/loginImage.jpg";
+// BASIC SETUP FOR NOW 
+
+// TODO Connect this page to backend routes
 
 export default function LoginPage() {
-  const { loginWithRedirect } = useAuth0();
+  // const { loginWithRedirect } = useAuth0();
 
   return (
     <div className="flex h-screen">
@@ -24,7 +26,7 @@ export default function LoginPage() {
           <button
             type="button"
             className="w-full rounded-lg bg-[#3a5b22] px-4 py-3 font-semibold text-white transition hover:bg-[#034605]"
-            onClick={() => loginWithRedirect()}
+            // onClick={() => loginWithRedirect()}
           >
             Sign in
           </button>
@@ -35,7 +37,7 @@ export default function LoginPage() {
           <a
             href="#"
             className="text-blue-600 underline"
-            onClick={() => loginWithRedirect()}
+            // onClick={() => loginWithRedirect()}
           >
             Sign Up
           </a>
