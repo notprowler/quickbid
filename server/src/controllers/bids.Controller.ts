@@ -24,8 +24,6 @@ const newBid: RequestHandler = async (req: Request, res: Response) => {
             res.status(500).json({ error: `${e.message}` });
         } else if (typeof e === 'object' && e !== null && 'message' in e) {
             res.status(500).json({ error: `${e.message}` });
-        } else {
-            res.status(500).json({ error: 'Unknown error posting new bid' });
         }
     }
 }
@@ -52,8 +50,6 @@ const retrieveAllBids: RequestHandler = async (req: Request, res: Response) => {
             res.status(500).json({ error: `${e.message}` });
         } else if (typeof e === 'object' && e !== null && 'message' in e) {
             res.status(500).json({ error: `${e.message}` });
-        } else {
-            res.status(500).json({ error: 'Unknown error retrieving all bids' });
         }
     }
 }
@@ -103,8 +99,6 @@ const bidAccepted: RequestHandler = async (req: Request, res: Response) => {
             res.status(500).json({ error: `${e.message}` });
         } else if (typeof e === 'object' && e !== null && 'message' in e) {
             res.status(500).json({ error: `${e.message}` });
-        } else {
-            res.status(500).json({ error: 'Unknown error accepting bid' });
         }
     }
 }
@@ -134,8 +128,6 @@ const bidRejected: RequestHandler = async (req: Request, res: Response) => {
             res.status(500).json({ error: `${e.message}` });
         } else if (typeof e === 'object' && e !== null && 'message' in e) {
             res.status(500).json({ error: `${e.message}` });
-        } else {
-            res.status(500).json({ error: 'Unknown error rejecting bid' });
         }
     }
 }
