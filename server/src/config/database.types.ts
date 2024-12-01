@@ -82,6 +82,35 @@ export type Database = {
           },
         ]
       }
+      comments: {
+        Row: {
+          comment: string | null
+          comment_id: number
+          created_at: string
+          user_id: number
+        }
+        Insert: {
+          comment?: string | null
+          comment_id?: number
+          created_at?: string
+          user_id: number
+        }
+        Update: {
+          comment?: string | null
+          comment_id?: number
+          created_at?: string
+          user_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           created_at: string
@@ -123,9 +152,106 @@ export type Database = {
           },
         ]
       }
+      ratings: {
+        Row: {
+          created_at: string
+          five_ratings: number | null
+          four_ratings: number | null
+          one_ratings: number | null
+          ratings_id: number
+          three_ratings: number | null
+          two_ratings: number | null
+          user_id: number | null
+        }
+        Insert: {
+          created_at?: string
+          five_ratings?: number | null
+          four_ratings?: number | null
+          one_ratings?: number | null
+          ratings_id?: number
+          three_ratings?: number | null
+          two_ratings?: number | null
+          user_id?: number | null
+        }
+        Update: {
+          created_at?: string
+          five_ratings?: number | null
+          four_ratings?: number | null
+          one_ratings?: number | null
+          ratings_id?: number
+          three_ratings?: number | null
+          two_ratings?: number | null
+          user_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ratings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          buyer_id: number
+          created_at: string
+          discount_applied: boolean
+          item_id: number
+          seller_id: number
+          transaction_amount: number
+          transaction_date: string
+          transaction_id: number
+        }
+        Insert: {
+          buyer_id: number
+          created_at?: string
+          discount_applied: boolean
+          item_id: number
+          seller_id: number
+          transaction_amount: number
+          transaction_date?: string
+          transaction_id?: number
+        }
+        Update: {
+          buyer_id?: number
+          created_at?: string
+          discount_applied?: boolean
+          item_id?: number
+          seller_id?: number
+          transaction_amount?: number
+          transaction_date?: string
+          transaction_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "transactions_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["item_id"]
+          },
+          {
+            foreignKeyName: "transactions_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       users: {
         Row: {
           Address: string
+          average_rating: Database["public"]["Enums"]["user_rating"] | null
           balance: number
           created_at: string
           email: string
@@ -138,6 +264,7 @@ export type Database = {
         }
         Insert: {
           Address: string
+          average_rating?: Database["public"]["Enums"]["user_rating"] | null
           balance?: number
           created_at?: string
           email: string
@@ -150,6 +277,7 @@ export type Database = {
         }
         Update: {
           Address?: string
+          average_rating?: Database["public"]["Enums"]["user_rating"] | null
           balance?: number
           created_at?: string
           email?: string
@@ -167,11 +295,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_rating: {
+        Args: {
+          column_name: string
+          user_id: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       bid_status: "pending" | "accepted" | "rejected"
       status: "available" | "sold" | "rented"
+      user_rating: "1" | "2" | "3" | "4" | "5"
     }
     CompositeTypes: {
       [_ in never]: never
