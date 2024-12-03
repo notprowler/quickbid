@@ -3,6 +3,7 @@ import transactionsController from '@/controllers/transactions.Controller';
 
 const router = express.Router();
 
-router.post('/', transactionsController.newTransaction);
+router.post('/:id', transactionsController.newTransaction);
+router.get('/:id', transactionsController.getTransactions);
 
 export default router;
