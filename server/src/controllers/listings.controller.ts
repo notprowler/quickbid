@@ -30,21 +30,30 @@ const getListings: RequestHandler = async (req: Request, res: Response) => {
 };
 
 const getListing: RequestHandler = async (req: Request, res: Response) => {
-  const { id } = req.body;
+  const id = req.params.id; // `req.params` contains route parameters
+
+  if (!id || isNaN(Number(id))) {
+    res.status(400).json({ error: "Invalid or missing listing ID" });
+    return;
+  }
+
+  const parsedId = Number(id);
 
   try {
     const { data, error } = await supabase
       .from("listings")
       .select("*")
-      .eq("item_id", id)
+      .eq("item_id", parsedId)
       .single();
 
     if (error) {
       res.status(500).json({ error: error.message });
+      return;
     }
 
     if (!data) {
       res.status(404).json({ error: "Listing not found" });
+      return;
     }
 
     res.status(200).json(data);

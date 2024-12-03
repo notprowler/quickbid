@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { getListings } from "../api/listingsApi";
 
 import { FaFilter } from "react-icons/fa";
-import cutedog from "../assets/cutedog.jpg";
 
 interface Listing {
   item_id: number;
@@ -232,7 +231,7 @@ export default function Listings() {
             onClick={() => navigate(`/item/${listing.item_id}`)}
           >
             <img
-              src={listing.image || cutedog}
+              src={listing.image}
               alt={listing.title}
               className="mb-2 h-64 w-full rounded object-cover"
             />
