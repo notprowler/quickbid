@@ -2,11 +2,25 @@ import supabase from "@/config/database";
 import type { Request, RequestHandler, Response } from "express";
 
 const getListings: RequestHandler = async (req: Request, res: Response) => {
+  const { category, minPrice, maxPrice } = req.query;
+
   try {
-    const { data, error } = await supabase.from("listings").select("*");
+    let query = supabase.from("listings").select("*");
+
+    if (category && category !== "All") {
+      query = query.eq("category", category);
+    }
+    if (minPrice) {
+      query = query.gte("price", Number(minPrice));
+    }
+    if (maxPrice) {
+      query = query.lte("price", Number(maxPrice));
+    }
+
+    const { data, error } = await query;
 
     if (error) {
-      res.status(500).json({ error: error.message });
+      throw res.status(500).json({ error: error.message });
     }
 
     res.status(200).json(data);

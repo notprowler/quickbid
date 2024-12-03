@@ -62,11 +62,26 @@ export default function Listings() {
     setShowModal((prev) => !prev);
   };
 
-  const applyFilters = () => {
+  const applyFilters = async () => {
     setShowModal(false);
+
     setAppliedCategory(selectedCategory);
-    setAppliedMinPrice(minPrice ? parseFloat(minPrice) : null);
-    setAppliedMaxPrice(maxPrice ? parseFloat(maxPrice) : null);
+    setAppliedMinPrice(minPrice ? Number(minPrice) : null);
+    setAppliedMaxPrice(maxPrice ? Number(maxPrice) : null);
+
+    const filters: Record<string, string> = {};
+    if (minPrice) filters.minPrice = minPrice;
+    if (maxPrice) filters.maxPrice = maxPrice;
+    if (selectedCategory !== "All") filters.category = selectedCategory;
+
+    const queryString = `?${new URLSearchParams(filters).toString()}`;
+
+    try {
+      const data = await getListings(queryString);
+      setListings(data);
+    } catch (error) {
+      console.error("Error applying filters:", error);
+    }
   };
 
   const resetFilters = () => {
