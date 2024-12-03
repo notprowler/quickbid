@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import cutedog from "../assets/cutedog.jpg";
+import Rating from "../components/Rate";
 
 interface Item {
   id: number;
@@ -15,12 +16,26 @@ interface Item {
 }
 
 interface BoughtItem {
-  id: number;
-  title: string;
+  transaction_id: number;
+  created_at: Date;
+  buyer_id: number;
+  item_id: number;
+  transaction_amount: number;
+  discount_applied: boolean;
+  listings: Listing;
+}
+
+interface Listing {
+  type: string;
+  image: string;
   price: number;
-  imageUrl: string;
-  datePurchased: string;
-  transactionType: "sell" | "bid";
+  title: string;
+  status: string;
+  item_id: number;
+  category: string | null;
+  owner_id: number;
+  created_at: Date;
+  description: string;
 }
 
 const CartPage: React.FC = () => {
@@ -56,27 +71,12 @@ const CartPage: React.FC = () => {
     },
   ]);
 
-  const [boughtItems, setBoughtItems] = useState<BoughtItem[]>([
-    {
-      id: 101,
-      title: "Item A",
-      price: 50,
-      imageUrl: cutedog,
-      datePurchased: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString(),
-      transactionType: "sell",
-    },
-    {
-      id: 102,
-      title: "Item B",
-      price: 80,
-      imageUrl: cutedog,
-      datePurchased: new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString(),
-      transactionType: "bid",
-    },
-  ]);
-
   const [timers, setTimers] = useState<{ [id: number]: string }>({});
-  const [showBoughtItems, setShowBoughtItems] = useState(false);
+
+  const [boughtItems, setBoughtItems] = useState<BoughtItem[]>([]);
+  const [showBoughtItems, setShowBoughtItems] = useState<boolean>(false);
+  const [showRate, setShowRate] = useState<boolean>(false);
+  const [selectedItem, setSelectedItem] = useState<BoughtItem>();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -105,6 +105,28 @@ const CartPage: React.FC = () => {
     return () => clearInterval(interval); // Cleanup on component unmount
   }, [items]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        /* userID needed */
+        const res = await fetch(`http://localhost:3000/api/transactions/21`);
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+
+        const result = await res.json();
+        console.log(result);
+        setBoughtItems(result);
+      } catch (e) {
+        if (e instanceof Error) {
+          console.error(`Error: ${e.message}`);
+        }
+      }
+    };
+    fetchData();
+  }, []);
+
   const handleRemoveItem = (id: number) => {
     setItems((prevItems) => prevItems.filter((item) => item.id !== id));
   };
@@ -112,7 +134,7 @@ const CartPage: React.FC = () => {
   const subtotal = items.reduce((acc, item) => acc + item.price, 0); // Simplified subtotal calculation
 
   return (
-    <div className="mx-auto max-w-7xl p-4">
+    <div className="relative mx-auto max-w-7xl p-4">
       <h1 className="mb-6 text-3xl font-bold underline">Actively Purchasing</h1>
 
       {/* Main Content: Cart Items and Summary */}
@@ -123,7 +145,6 @@ const CartPage: React.FC = () => {
             <div
               key={item.id}
               className="relative flex cursor-pointer items-center gap-4 rounded-lg p-4 shadow-md transition duration-300 ease-in-out hover:-translate-y-2"
-              onClick={() => navigate(`/item/${item.id}`)}
             >
               {/* LOSING or Awaiting Approval tag */}
               {item.transactionType === "bid" &&
@@ -223,33 +244,50 @@ const CartPage: React.FC = () => {
         >
           {boughtItems.map((item) => (
             <div
-              key={item.id}
+              key={item.transaction_id}
               className="relative mb-4 flex items-center gap-4 rounded-lg p-4 shadow-md"
-              onClick={() => navigate(`/item/${item.id}`)} // Redirect to product page
             >
               <img
-                src={item.imageUrl}
-                alt={item.title}
+                src={item.listings.image}
+                alt={item.listings.title}
                 className="h-32 w-32 rounded-lg object-cover"
               />
               <div className="flex-1">
-                <h3 className="text-2xl font-bold">{item.title}</h3>
+                <h3 className="text-2xl font-bold"></h3>
                 <p className="mb-2 text-lg text-gray-700">
-                  Price: ${item.price}
+                  Price: ${item.transaction_amount}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Date Purchased:{" "}
-                  {new Date(item.datePurchased).toLocaleDateString()}
+                  Date Purchased: {item.created_at.toString().split("T")[0]}
                 </p>
                 <hr className="my-2" />
-                <button className="rounded-full px-4 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200">
+                <button
+                  className="rounded-full px-1 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+                  onClick={() => navigate(`/item/${item.item_id}`)}
+                >
                   View Item
+                </button>
+                <button
+                  className="rounded-full px-4 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+                  onClick={() => {
+                    setShowRate(true);
+                    setSelectedItem(item);
+                  }}
+                >
+                  Rate Purchase
                 </button>
               </div>
             </div>
           ))}
         </div>
       </div>
+      {showRate && selectedItem && (
+        <Rating
+          sellerID={selectedItem?.listings.owner_id}
+          img={selectedItem?.listings.image}
+          toggleRateForm={setShowRate}
+        />
+      )}
     </div>
   );
 };
