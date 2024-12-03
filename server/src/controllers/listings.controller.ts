@@ -16,14 +16,19 @@ const getListings: RequestHandler = async (req: Request, res: Response) => {
 };
 
 const getListing: RequestHandler = async (req: Request, res: Response) => {
-  const { id } = req.body;
+  const { id } = req.params;
+
+  if (!id) {
+    res.status(400).json({ error: "Please provide a User ID" });
+    return;
+  }
 
   try {
     const { data, error } = await supabase
       .from("listings")
       .select("*")
-      .eq("item_id", id)
-      .single();
+      .eq("owner_id", id)
+      .select();
 
     if (error) {
       res.status(500).json({ error: error.message });
