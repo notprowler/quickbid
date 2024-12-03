@@ -18,11 +18,7 @@ import authRouter from "@/routes/auth";
 const app: Application = express();
 const PORT = process.env.SERVER_PORT || 3000;
 
-app.use(cors({
-  origin: 'http://localhost:5173',
-  methods: 'GET,POST,PUT,DELETE,PATCH',
-  credentials: true
-}));
+app.use(cors());
 
 app.use(cookieParser());
 app.use(express.json());

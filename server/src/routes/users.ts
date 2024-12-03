@@ -1,6 +1,6 @@
 
 import express from 'express';
-import { getUser, updateUser, updateUserStatus, deleteUser, updateUserRating, newUserComment } from '@/controllers/users.controller';
+import { getUser, updateUser, updateUserStatus, deleteUser, updateUserRating, newUserComplaint } from '@/controllers/users.controller';
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ router.put('/:id', updateUser)
 router.delete('/:id', deleteUser)
 router.put('/status/:id', updateUserStatus)
 router.put('/rating/:id', updateUserRating)
-router.post('/comment/:id', newUserComment);
+router.post('/complaint/:id', newUserComplaint);
 
 export default router 
 
