@@ -21,20 +21,17 @@ function App() {
           <Route path="/item/:itemID" element={<ProductPage />} />
           <Route path="/cart" element={<CartPage />} />
 
-          <Route
-           path="/profile"
-           element={
-          //   <PrivateRoute>
-          <ProfilePage />
-          //   </PrivateRoute>
-          }
-          />
+          {/* <Route
+            path="/profile"
+            element={
+              //   <PrivateRoute>
+              <ProfilePage />
+              //   </PrivateRoute>
+            }
+          /> */}
 
           {/* for page not found */}
           <Route path="*" element={<ErrorPage />} />
-          
-          <Route path="/rate/:transaction_id" element={<Rating />} />
-        
         </Route>
 
         <Route element={<NoNavbarLayout />}>
