@@ -10,6 +10,7 @@ import ProductPage from "./pages/ProductPage.tsx";
 import LandingPage from "./pages/LandingPage.tsx"; // Import the LandingPage component
 import Listings from "./pages/Listings.tsx";
 import Rating from "./components/Rate.tsx";
+import CreateListing from "./pages/createListing.tsx";
 
 function App() {
   return (
@@ -20,6 +21,9 @@ function App() {
           <Route path="/listings" element={<Listings />} />
           <Route path="/item/:itemID" element={<ProductPage />} />
           <Route path="/cart" element={<CartPage />} />
+
+          
+          <Route path="/newlisting" element={<CreateListing />} />
 
           {/* <Route
             path="/profile"
