@@ -184,7 +184,7 @@ export type Database = {
           {
             foreignKeyName: "listings_owner_id_fkey";
             columns: ["owner_id"];
-            isOneToOne: true;
+            isOneToOne: false;
             referencedRelation: "users";
             referencedColumns: ["user_id"];
           }
@@ -237,6 +237,7 @@ export type Database = {
           created_at: string;
           discount_applied: boolean;
           item_id: number;
+          seller_id: number;
           transaction_amount: number;
           transaction_id: number;
         };
@@ -245,6 +246,7 @@ export type Database = {
           created_at?: string;
           discount_applied: boolean;
           item_id: number;
+          seller_id: number;
           transaction_amount: number;
           transaction_id?: number;
         };
@@ -253,6 +255,7 @@ export type Database = {
           created_at?: string;
           discount_applied?: boolean;
           item_id?: number;
+          seller_id?: number;
           transaction_amount?: number;
           transaction_id?: number;
         };
@@ -270,6 +273,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "listings";
             referencedColumns: ["item_id"];
+          },
+          {
+            foreignKeyName: "transactions_seller_id_fkey";
+            columns: ["seller_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["user_id"];
           }
         ];
       };
