@@ -62,8 +62,35 @@ const getListing: RequestHandler = async (req: Request, res: Response) => {
   }
 };
 
+//@ts-ignore
 const createListing: RequestHandler = async (req: Request, res: Response) => {
-  //TODO
+  
+  const {  owner_id, type, title, description, price, category } = req.body;
+
+  if (!title || !description || !price || !owner_id || !type || !category) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  const status = "active"
+  // Placeholder value for the image 
+  const image = "https://community.softr.io/uploads/db9110/original/2X/7/74e6e7e382d0ff5d7773ca9a87e6f6f8817a68a6.jpeg"
+  
+  const created_at = new Date().toISOString();
+
+  try {
+    const { data, error } = await supabase
+      .from("listings")
+      .insert([{ title, description, price, owner_id, status, type, category, image}])
+      .select();
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.status(201).json(data);
+  } catch (err) {
+    return res.status(500).json({ error: "An unexpected error occurred" });
+  }
 };
 
 export default {
