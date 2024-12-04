@@ -1,11 +1,12 @@
-import express from 'express'
-import listingsController from '@/controllers/listings.controller'
-const router = express.Router()
+import express from "express";
+import listingsController from "@/controllers/listings.controller";
+const router = express.Router();
 
-router.get('/', listingsController.getListings);
-router.get('/:id', listingsController.getListing);
+router.get("/", listingsController.getListings);
+router.get("/:id", listingsController.getListing);
+
 // router.post('/', )
 // router.delete('/:id', )
 // router.patch('/:id', )
 
-export default router
+export default router;

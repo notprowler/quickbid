@@ -15,17 +15,17 @@ interface Item {
   awaitingApproval?: boolean;
 }
 
-interface BoughtItem {
+interface UserTransactions {
   transaction_id: number;
   created_at: Date;
   buyer_id: number;
   item_id: number;
   transaction_amount: number;
   discount_applied: boolean;
-  listings: Listing;
+  listings: UserListings;
 }
 
-interface Listing {
+interface UserListings {
   type: string;
   image: string;
   price: number;
@@ -73,10 +73,10 @@ const CartPage: React.FC = () => {
 
   const [timers, setTimers] = useState<{ [id: number]: string }>({});
 
-  const [boughtItems, setBoughtItems] = useState<BoughtItem[]>([]);
+  const [boughtItems, setBoughtItems] = useState<UserTransactions[]>([]);
   const [showBoughtItems, setShowBoughtItems] = useState<boolean>(false);
   const [showRate, setShowRate] = useState<boolean>(false);
-  const [selectedItem, setSelectedItem] = useState<BoughtItem>();
+  const [selectedItem, setSelectedItem] = useState<UserTransactions>();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -109,7 +109,9 @@ const CartPage: React.FC = () => {
     const fetchData = async () => {
       try {
         /* userID needed */
-        const res = await fetch(`http://localhost:3000/api/transactions/21`);
+        const res = await fetch(
+          `http://localhost:3000/api/transactions/buyer/21`,
+        );
 
         if (!res.ok) {
           throw new Error(`HTTP error! Status: ${res.status}`);

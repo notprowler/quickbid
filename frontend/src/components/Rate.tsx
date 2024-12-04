@@ -5,8 +5,9 @@ import { CiStar } from "react-icons/ci";
 import { FaRegStar } from "react-icons/fa6";
 
 interface RateProps {
-  sellerID: number | undefined;
-  img: string | undefined;
+  sellerID?: number;
+  buyerID?: number;
+  img?: string;
   toggleRateForm: (toggle: boolean) => void;
 }
 
@@ -20,10 +21,10 @@ TO DO:
 
 const Rating: React.FC<RateProps> = ({
   sellerID,
+  buyerID,
   img,
   toggleRateForm,
 }: RateProps) => {
-  console.log(sellerID);
   const [isClicked1, setIsClicked1] = useState<boolean>(false);
   const [isClicked2, setIsClicked2] = useState<boolean>(false);
   const [isClicked3, setIsClicked3] = useState<boolean>(false);
@@ -35,7 +36,7 @@ const Rating: React.FC<RateProps> = ({
 
   async function updateRating(): Promise<void> {
     const res = await fetch(
-      `http://localhost:3000/api/users/rating/${sellerID}`,
+      `http://localhost:3000/api/users/rating/${sellerID == undefined ? buyerID : sellerID}`,
       {
         method: "PUT",
         headers: {
@@ -54,7 +55,7 @@ const Rating: React.FC<RateProps> = ({
 
   async function submitComplaint(): Promise<void> {
     const res = await fetch(
-      `http://localhost:3000/api/users/complaint/${sellerID}`,
+      `http://localhost:3000/api/users/complaint/${sellerID == undefined ? buyerID : sellerID}`,
       {
         method: "POST",
         headers: {
@@ -86,7 +87,9 @@ const Rating: React.FC<RateProps> = ({
   useEffect(() => {
     try {
       const fetchData = async () => {
-        const res = await fetch(`http://localhost:3000/api/users/${sellerID}`);
+        const res = await fetch(
+          `http://localhost:3000/api/users/${sellerID == undefined ? buyerID : sellerID}`,
+        );
 
         if (!res.ok) {
           throw new Error(`HTTP Status: ${res.status}`);

@@ -4,11 +4,11 @@ import "dotenv";
 import cors from "cors";
 import Stripe from "stripe";
 // @ts-ignore
-import cookieParser from "cookie-parser"
+import cookieParser from "cookie-parser";
 import listingsRoutes from "@/routes/listings";
 import usersRoutes from "@/routes/users";
 import bidRouter from "@/routes/bids";
-import transactionsRouter from '@/routes/transactions';
+import transactionsRouter from "@/routes/transactions";
 import transactionsController from "./controllers/transactions.Controller";
 
 import authRouter from "@/routes/auth";
@@ -33,10 +33,10 @@ app.listen(PORT, () => {
 
 /* Auth middleware for U actions (TO DO) */
 
-app.use('/api/listings', listingsRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/bids', bidRouter);
-app.use('/api/transactions', transactionsRouter);
+app.use("/api/listings", listingsRoutes);
+app.use("/api/users", usersRoutes);
+app.use("/api/bids", bidRouter);
+app.use("/api/transactions", transactionsRouter);
 app.use("/auth", authRouter);
 
 // // Stripe API for adding funds to account
@@ -58,4 +58,3 @@ app.use("/auth", authRouter);
 //     res.status(500).json({ error: error.message });
 //   }
 // });
-
