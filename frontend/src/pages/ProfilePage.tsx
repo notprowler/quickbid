@@ -159,7 +159,7 @@ export default function ProfilePage() {
       }
     };
     fetchData();
-  });
+  }, []);
 
   return (
     <div className="mx-auto max-w-3xl p-4 font-imprima">
