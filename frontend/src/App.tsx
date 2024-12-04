@@ -3,7 +3,7 @@ import PrivateRoute from "./components/PrivateRoute.tsx";
 import SigninPage from "./pages/SigninPage.tsx";
 import ErrorPage from "./pages/ErrorPage.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
-
+import LoginPage from "./pages/RegisterPage.tsx";
 import MainLayout from "./layouts/MainLayout.tsx";
 import NoNavbarLayout from "./layouts/NoNavbarLayout.tsx";
 import ProductPage from "./pages/ProductPage.tsx";
@@ -31,13 +31,15 @@ function App() {
 
           {/* for page not found */}
           <Route path="*" element={<ErrorPage />} />
-          
+
           {/* <Route path="/rate/:transaction_id" element={<Rating />} /> */}
         
         </Route>
-
         <Route element={<NoNavbarLayout />}>
-          <Route path="/login" element={<SigninPage />} />
+          {<Route path="/login" element={<LoginPage />} />}
+        </Route>
+        <Route element={<NoNavbarLayout />}>
+          <Route path="/signup" element={<SigninPage />} />
         </Route>
       </Routes>
     </Router>
