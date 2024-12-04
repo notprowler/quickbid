@@ -1,14 +1,17 @@
 import express, { Application, Request, Response } from "express";
-
+import { Configuration, OpenAIApi } from 'openai';
 import "dotenv";
 import cors from "cors";
 import Stripe from "stripe";
 // @ts-ignore
+import supabase from './database'; // Import the Supabase client
+
 import cookieParser from "cookie-parser"
 import listingsRoutes from "@/routes/listings";
 import usersRoutes from "@/routes/users";
 import bidRouter from "@/routes/bids";
 import transactionsRouter from '@/routes/transactions';
+import chatbotRouter from '@/routes/chatbot';
 import transactionsController from "./controllers/transactions.Controller";
 
 import authRouter from "@/routes/auth";
@@ -17,7 +20,7 @@ import authRouter from "@/routes/auth";
 
 const app: Application = express();
 const PORT = process.env.SERVER_PORT || 3000;
-
+const openai = new OpenAIApi(configuration)
 app.use(cors({
   origin: 'http://localhost:5173',
   methods: 'GET,POST,PUT,DELETE,PATCH',
@@ -42,6 +45,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/bids', bidRouter);
 app.use('/api/transactions', transactionsRouter);
 app.use("/auth", authRouter);
+app.use('/api/chatbot', chatbotRouter); 
 
 // // Stripe API for adding funds to account
 // app.post("/create-payment-intent", async (req, res) => {
