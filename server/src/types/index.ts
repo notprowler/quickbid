@@ -1,7 +1,8 @@
-
 export interface AuthenticatedUser {
-  id: string;
-  username: string;
-  email: string;
-  // Add other properties as needed
+  user_id: number;
+  username?: string;
+  email?: string;
+  iat: number; // "Issued At" timestamp from the JWT
+  exp: number; // "Expiration" timestamp from the JWT
+  // add more if necessary
 }

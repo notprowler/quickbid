@@ -21,14 +21,14 @@ function App() {
           <Route path="/item/:itemID" element={<ProductPage />} />
           <Route path="/cart" element={<CartPage />} />
 
-          {/* <Route
+          <Route
             path="/profile"
             element={
               <PrivateRoute>
                 <ProfilePage />
               </PrivateRoute>
             }
-          /> */}
+          />
 
           {/* for page not found */}
           <Route path="*" element={<ErrorPage />} />
