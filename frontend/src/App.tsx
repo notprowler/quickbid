@@ -9,6 +9,7 @@ import NoNavbarLayout from "./layouts/NoNavbarLayout.tsx";
 import ProductPage from "./pages/ProductPage.tsx";
 import LandingPage from "./pages/LandingPage.tsx"; // Import the LandingPage component
 import Listings from "./pages/Listings.tsx";
+import RegisterPage from "./pages/RegisterPage.tsx";
 import Rating from "./components/Rate.tsx";
 
 function App() {
@@ -32,12 +33,11 @@ function App() {
 
           {/* for page not found */}
           <Route path="*" element={<ErrorPage />} />
-
-          {/* <Route path="/rate/:transaction_id" element={<Rating />} /> */}
         </Route>
 
         <Route element={<NoNavbarLayout />}>
           <Route path="/login" element={<SigninPage />} />
+          <Route path="/register" element={<RegisterPage />} />
         </Route>
       </Routes>
     </Router>

@@ -84,26 +84,58 @@ export type Database = {
       };
       comments: {
         Row: {
-          comment: string | null;
           comment_id: number;
+          comments: string | null;
           created_at: string;
+          listing_id: number;
+        };
+        Insert: {
+          comment_id?: number;
+          comments?: string | null;
+          created_at?: string;
+          listing_id: number;
+        };
+        Update: {
+          comment_id?: number;
+          comments?: string | null;
+          created_at?: string;
+          listing_id?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "comments_listing_id_fkey";
+            columns: ["listing_id"];
+            isOneToOne: false;
+            referencedRelation: "listings";
+            referencedColumns: ["item_id"];
+          }
+        ];
+      };
+      complaints: {
+        Row: {
+          complaint_id: number;
+          complaints: string;
+          created_at: string;
+          status: Database["public"]["Enums"]["complaints_status"];
           user_id: number;
         };
         Insert: {
-          comment?: string | null;
-          comment_id?: number;
+          complaint_id?: number;
+          complaints: string;
           created_at?: string;
+          status: Database["public"]["Enums"]["complaints_status"];
           user_id: number;
         };
         Update: {
-          comment?: string | null;
-          comment_id?: number;
+          complaint_id?: number;
+          complaints?: string;
           created_at?: string;
+          status?: Database["public"]["Enums"]["complaints_status"];
           user_id?: number;
         };
         Relationships: [
           {
-            foreignKeyName: "comments_user_id_fkey";
+            foreignKeyName: "complaints_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "users";
@@ -113,31 +145,37 @@ export type Database = {
       };
       listings: {
         Row: {
+          category: string | null;
           created_at: string;
           description: string;
+          image: string | null;
           item_id: number;
           owner_id: number;
-          price: string;
+          price: number;
           status: string;
           title: string;
           type: string;
         };
         Insert: {
+          category?: string | null;
           created_at?: string;
           description: string;
+          image?: string | null;
           item_id?: number;
           owner_id: number;
-          price: string;
+          price: number;
           status: string;
           title: string;
           type: string;
         };
         Update: {
+          category?: string | null;
           created_at?: string;
           description?: string;
+          image?: string | null;
           item_id?: number;
           owner_id?: number;
-          price?: string;
+          price?: number;
           status?: string;
           title?: string;
           type?: string;
@@ -146,11 +184,44 @@ export type Database = {
           {
             foreignKeyName: "listings_owner_id_fkey";
             columns: ["owner_id"];
-            isOneToOne: true;
+            isOneToOne: false;
             referencedRelation: "users";
             referencedColumns: ["user_id"];
           }
         ];
+      };
+      pending_users: {
+        Row: {
+          address: string;
+          created_at: string | null;
+          email: string;
+          full_name: string;
+          id: number;
+          password_hash: string;
+          status: string | null;
+          username: string;
+        };
+        Insert: {
+          address: string;
+          created_at?: string | null;
+          email: string;
+          full_name: string;
+          id?: number;
+          password_hash: string;
+          status?: string | null;
+          username: string;
+        };
+        Update: {
+          address?: string;
+          created_at?: string | null;
+          email?: string;
+          full_name?: string;
+          id?: number;
+          password_hash?: string;
+          status?: string | null;
+          username?: string;
+        };
+        Relationships: [];
       };
       ratings: {
         Row: {
@@ -201,7 +272,6 @@ export type Database = {
           item_id: number;
           seller_id: number;
           transaction_amount: number;
-          transaction_date: string;
           transaction_id: number;
         };
         Insert: {
@@ -211,7 +281,6 @@ export type Database = {
           item_id: number;
           seller_id: number;
           transaction_amount: number;
-          transaction_date?: string;
           transaction_id?: number;
         };
         Update: {
@@ -221,7 +290,6 @@ export type Database = {
           item_id?: number;
           seller_id?: number;
           transaction_amount?: number;
-          transaction_date?: string;
           transaction_id?: number;
         };
         Relationships: [
@@ -251,10 +319,11 @@ export type Database = {
       users: {
         Row: {
           address: string;
-          average_rating: Database["public"]["Enums"]["user_rating"] | null;
+          average_rating: number | null;
           balance: number;
           created_at: string;
           email: string;
+          full_name: string | null;
           password_hash: string;
           role: string;
           status: string;
@@ -264,10 +333,11 @@ export type Database = {
         };
         Insert: {
           address: string;
-          average_rating?: Database["public"]["Enums"]["user_rating"] | null;
+          average_rating?: number | null;
           balance?: number;
           created_at?: string;
           email: string;
+          full_name?: string | null;
           password_hash: string;
           role?: string;
           status?: string;
@@ -277,10 +347,11 @@ export type Database = {
         };
         Update: {
           address?: string;
-          average_rating?: Database["public"]["Enums"]["user_rating"] | null;
+          average_rating?: number | null;
           balance?: number;
           created_at?: string;
           email?: string;
+          full_name?: string | null;
           password_hash?: string;
           role?: string;
           status?: string;
@@ -305,6 +376,7 @@ export type Database = {
     };
     Enums: {
       bid_status: "pending" | "accepted" | "rejected";
+      complaints_status: "pending" | "resolved";
       status: "available" | "sold" | "rented";
       user_rating: "1" | "2" | "3" | "4" | "5";
     };

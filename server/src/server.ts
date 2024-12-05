@@ -9,7 +9,7 @@ import listingsRoutes from "@/routes/listings";
 import usersRoutes from "@/routes/users";
 import bidRouter from "@/routes/bids";
 import transactionsRouter from "@/routes/transactions";
-import transactionsController from "./controllers/transactions.Controller";
+import registerRoutes from "@/routes/register";
 
 import authRouter from "@/routes/auth";
 
@@ -44,6 +44,8 @@ app.use("/api/users", usersRoutes);
 app.use("/api/bids", bidRouter);
 app.use("/api/transactions", transactionsRouter);
 app.use("/auth", authRouter);
+
+app.use("/api/visitors/register", registerRoutes);
 
 // // Stripe API for adding funds to account
 // app.post("/create-payment-intent", async (req, res) => {
