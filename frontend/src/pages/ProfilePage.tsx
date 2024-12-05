@@ -1,21 +1,19 @@
-import { useAuth0 } from "@auth0/auth0-react";
-import { useState } from "react";
-import TestImage from "../assets/cutedog.jpg";
-import EditProfile from "../components/EditProfile";
-import AddFunds from "../components/AddFunds";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
+import EditProfile from "../components/EditProfile";
+import AddFunds from "../components/AddFunds";
+
+import TestImage from "../assets/cutedog.jpg";
+
 interface UserData {
-  name: string;
+  user_id: number;
   email: string;
   username: string;
-  profilePicture: string;
-  vipStatus: boolean;
+  profilePicture?: string; // Optional
+  vip: boolean;
   balance: number;
-  ratings: {
-    average: number;
-    count: number;
-  };
+  average_rating: number | null;
   listings: {
     id: number;
     title: string;
@@ -25,44 +23,66 @@ interface UserData {
 }
 
 export default function ProfilePage() {
-  const { user, isAuthenticated, logout } = useAuth0();
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [showListings, setShowListings] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-
   const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [userData, setUserData] = useState<UserData>({
-    name: user?.name || "John Doe",
-    email: user?.email || "john.doe@example.com",
-    username: user?.nickname || "john_doe",
-    profilePicture: user?.picture || "",
-    vipStatus: true,
-    balance: 0,
-    ratings: { average: 4.5, count: 10 },
-    listings: [
-      { id: 1, title: "Vintage Bike", price: 120, sold: false },
-      { id: 2, title: "Office Desk", price: 200, sold: true },
-      { id: 3, title: "Antique Lamp", price: 75, sold: true },
-      { id: 4, title: "Gaming Chair", price: 150, sold: false },
-    ],
-  });
 
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get("/api/users/profile", {
+          withCredentials: true,
+          validateStatus: (status) => status < 500,
+        });
+
+        console.log("Backend Response Data:", response.data);
+
+        if (response.status === 200 || response.status === 304) {
+          setUserData({
+            user_id: response.data.user_id || 0,
+            username: response.data.username || "Guest",
+            email: response.data.email || "No Email",
+            profilePicture: response.data.profilePicture || TestImage,
+            vip: response.data.vip || false,
+            balance: response.data.balance || 0,
+            average_rating: response.data.average_rating || 0,
+            listings: response.data.listings || [],
+          });
+          console.log("User Data State Set:", userData);
+        } else {
+          setError("Failed to load profile data.");
+          console.error("API Error Response:", response);
+        }
+      } catch (err) {
+        console.error("Error fetching profile data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  // Update profile data after editing
   const handleProfileUpdate = (updatedData: Partial<UserData>) => {
-    setUserData((prevData) => ({
-      ...prevData,
-      ...updatedData,
-    }));
+    setUserData((prevData) =>
+      prevData ? { ...prevData, ...updatedData } : null,
+    );
   };
 
-  // function to get the clientSecret
+  // Handle Stripe payment intent creation
   const handleOpenAddFunds = async (amount: number) => {
     try {
-      // call backend to make payment intent
       const response = await axios.post(
         "http://localhost:4000/create-payment-intent",
-        {
-          amount: amount * 100, // need amount in cents
-        },
+        { amount: amount * 100 }, // Amount in cents
+        { withCredentials: true },
       );
 
       setClientSecret(response.data.clientSecret);
@@ -72,15 +92,28 @@ export default function ProfilePage() {
     }
   };
 
+  // Handle successful payment
   const handlePaymentSuccess = (amount: number) => {
-    setUserData((prevData) => ({
-      ...prevData,
-      balance: prevData.balance + amount,
-    }));
-    console.log("added funds:", amount);
+    setUserData((prevData) =>
+      prevData ? { ...prevData, balance: prevData.balance + amount } : null,
+    );
+    console.log("Added funds:", amount);
   };
 
-  if (!isAuthenticated) {
+  if (loading) {
+    return <div>Loading profile...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="mt-10 text-center">
+        <h1 className="text-2xl font-bold">Error</h1>
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  if (!userData) {
     return (
       <div className="mt-10 text-center">
         <h1 className="text-2xl font-bold">Access Denied</h1>
@@ -91,56 +124,55 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-3xl p-4 font-imprima">
-      <h1 className="mb-4 text-3xl font-bold">Welcome, {userData.name}</h1>
+      <h1 className="mb-4 text-3xl font-bold">Welcome, {userData.username}</h1>
 
       {/* User Information Card */}
       <div className="mb-6 flex items-center gap-4 rounded-lg px-8 py-4 shadow-md">
         <img
-          src={user?.picture}
+          src={userData.profilePicture || TestImage}
           alt="User Avatar"
           className="h-36 w-36 rounded-full object-cover"
         />
         <div>
-          <div className="px-4">
-            <h2 className="text-2xl font-bold">{userData.name}</h2>
-            <p className="text-xl text-gray-600">{userData.email}</p>
-            <span
-              className={`mt-2 inline-block rounded-full px-3 py-1 text-white ${
-                userData.vipStatus ? "bg-[#246fb6]" : "bg-gray-400"
-              }`}
-            >
-              {userData.vipStatus ? "VIP Member 🏆" : "Regular User"}
-            </span>
-          </div>
-          <div className="mt-4 flex gap-12 px-4">
+          <h2 className="text-2xl font-bold">{userData.username}</h2>
+          <p className="text-xl text-gray-600">{userData.email}</p>
+          <span
+            className={`mt-2 inline-block rounded-full px-3 py-1 text-white ${
+              userData.vip ? "bg-[#246fb6]" : "bg-gray-400"
+            }`}
+          >
+            {userData.vip ? "VIP Member 🏆" : "Regular User"}
+          </span>
+
+          <div className="mt-4 flex gap-12">
             <div>
               <p className="text-sm font-semibold">Balance</p>
               <p className="text-xl font-bold">
-                ${userData.balance.toFixed(2)}
+                ${userData.balance ? userData.balance.toFixed(2) : "0.00"}
               </p>
             </div>
             <div>
               <p className="text-sm font-semibold">Rating</p>
               <p className="text-xl font-bold">
-                {userData.ratings.average} / 5
+                {userData.average_rating !== null
+                  ? userData.average_rating
+                  : "No ratings yet"}{" "}
+                / 5
               </p>
             </div>
-            <div>
-              <p className="text-sm font-semibold">Reviews</p>
-              <p className="text-xl font-bold">{userData.ratings.count}</p>
-            </div>
           </div>
+
           <div className="space-x-20">
             <button
               onClick={() => setIsEditProfileOpen(true)}
-              className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+              className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition hover:bg-slate-200"
             >
               Edit Profile
             </button>
 
             <button
-              onClick={() => setIsAddFundsOpen(true)}
-              className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+              onClick={() => handleOpenAddFunds(50)} // Example amount
+              className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition hover:bg-slate-200"
             >
               Add Funds
             </button>
@@ -148,85 +180,62 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Listings Toggle Section */}
-      <div className="mb-2 flex items-center justify-between">
+      {/* Listings */}
+      <div className="mb-2">
         <button
           onClick={() => setShowListings(!showListings)}
-          className="flex w-full items-center justify-between rounded-lg px-4 py-3"
+          className="w-full px-4 py-2 text-left"
         >
-          <span className="text-2xl font-bold">View Your Listings</span>
-          <span className="text-xl">{showListings ? "▲" : "▼"}</span>
+          <span className="text-2xl font-bold">
+            {showListings ? "Hide Listings" : "View Listings"}
+          </span>
         </button>
       </div>
-      <hr className="mb-4" />
 
-      <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          showListings ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
-        }`}
-      >
-        {userData.listings.map((item) => (
-          <div
-            key={item.id}
-            className="relative mb-4 flex items-center gap-4 rounded-lg p-4 shadow-md"
-          >
-            {item.sold && (
-              <span className="absolute right-2 top-2 rounded-full px-3 py-1 font-semibold">
-                SOLD
-              </span>
-            )}
-            <img
-              src={TestImage}
-              alt={item.title}
-              className="h-32 w-32 rounded-lg object-cover"
-            />
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold">{item.title}</h3>
-              <p className="mb-2 text-lg text-gray-700">Price: ${item.price}</p>
-              <hr className="my-2" />
-              <div className="flex gap-2">
-                <button className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200">
-                  View
-                </button>
-                {!item.sold && (
-                  <button className="rounded-full px-4 py-1 font-semibold text-red-800 transition duration-200 ease-in-out hover:bg-slate-200">
-                    Remove
-                  </button>
+      {showListings && (
+        <div>
+          {userData.listings.length > 0 ? (
+            userData.listings.map((item) => (
+              <div key={item.id} className="mb-4 rounded p-4 shadow">
+                <h3 className="text-xl font-bold">{item.title}</h3>
+                <p className="text-lg">Price: ${item.price}</p>
+                {item.sold && (
+                  <span className="font-semibold text-green-600">Sold</span>
                 )}
               </div>
-            </div>
-          </div>
-        ))}
-      </div>
+            ))
+          ) : (
+            <p className="text-lg text-gray-600">No listings found.</p>
+          )}
+        </div>
+      )}
 
       {/* Edit Profile Window */}
       <EditProfile
         isOpen={isEditProfileOpen}
         onClose={() => setIsEditProfileOpen(false)}
-        userData={userData}
-        onUpdate={handleProfileUpdate}
+        userData={{
+          name: userData.username,
+          email: userData.email,
+          username: userData.username,
+          profilePicture: userData.profilePicture || "",
+        }}
+        onUpdate={(updatedData) => {
+          setUserData((prev) => (prev ? { ...prev, ...updatedData } : prev));
+        }}
       />
 
+      {/* Add Funds Modal */}
       <AddFunds
         isOpen={isAddFundsOpen}
         onClose={() => {
           setIsAddFundsOpen(false);
-          setClientSecret(null); // Reset clientSecret for the next transaction
+          setClientSecret(null); // Reset clientSecret for next transaction
         }}
         clientSecret={clientSecret}
         onPaymentSuccess={handlePaymentSuccess}
         onRequestPayment={handleOpenAddFunds}
       />
-
-      {/* Logout Button */}
-      <button
-        className="mt-6 rounded-full bg-red-800 px-4 py-2 font-semibold text-white hover:opacity-70"
-        onClick={() =>
-          logout({ logoutParams: { returnTo: window.location.origin } })
-        }
-      >
-        Log Out
-      </button>
     </div>
   );
 }
