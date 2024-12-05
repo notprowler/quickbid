@@ -40,7 +40,6 @@ const getUser: RequestHandler = async (req: Request, res: Response) => {
     res.status(400).json({ error: "Please provide a User ID" });
     return;
   }
-
   try {
     const { data, error } = await supabase
       .from("users")
@@ -153,29 +152,24 @@ Helper to update average ratings column after new update:
 Formula: (1 * a + 2 * b + 3 * c + 4 * d + 5 * e) / R WHERE
 a, b, c, d, e = number of ratings corresponding to 1-5 AND R = ratings
 */
-const updateAverageRating: (userRatings: any) => Promise<void> = async (
-  userRatings
-) => {
+const updateAverageRating: (userRatings: any) => Promise<void> = async ( userRatings ) => {
   const R =
     userRatings.one_ratings +
     userRatings.two_ratings +
     userRatings.three_ratings +
     userRatings.four_ratings +
     userRatings.five_ratings;
-  const rawSum =
-    (1 * userRatings.one_ratings +
+
+  const sum = (1 * userRatings.one_ratings +
       2 * userRatings.two_ratings +
       3 * userRatings.three_ratings +
       4 * userRatings.four_ratings +
       5 * userRatings.five_ratings) /
     R;
-  const acceptedSum = Math.ceil(rawSum);
 
   const { data, error } = await supabase
     .from("users")
-    .update({
-      average_rating: acceptedSum.toString() as "1" | "2" | "3" | "4" | "5",
-    })
+    .update({ average_rating: parseFloat(sum.toFixed(1)) })
     .eq("user_id", userRatings.user_id);
 
   if (error) throw new Error(`${error.message}`);
@@ -229,9 +223,13 @@ const updateUserRating: RequestHandler = async (
   }
 };
 
-const newUserComment: RequestHandler = async (req: Request, res: Response) => {
+
+const newUserComplaint: RequestHandler = async (
+  req: Request,
+  res: Response
+) => {
   const { id } = req.params;
-  const { comment } = req.body;
+  const { complaints } = req.body;
 
   if (!id) {
     res.status(400).json({ error: "Please provide a User ID" });
@@ -240,11 +238,13 @@ const newUserComment: RequestHandler = async (req: Request, res: Response) => {
 
   try {
     const { data, error } = await supabase
-      .from("comments")
+
+      .from("complaints")
       .insert([
         {
-          comment,
+          complaints,
           user_id: parseInt(id, 10),
+          status: "pending",
         },
       ])
       .select();
@@ -271,6 +271,6 @@ export {
   deleteUser,
   updateUserStatus,
   updateUserRating,
-  newUserComment,
+  newUserComplaint,
   getUserProfile,
 };

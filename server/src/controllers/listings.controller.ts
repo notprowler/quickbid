@@ -30,6 +30,7 @@ const getListings: RequestHandler = async (req: Request, res: Response) => {
 };
 
 const getListing: RequestHandler = async (req: Request, res: Response) => {
+
   const id = req.params.id; // `req.params` contains route parameters
 
   if (!id || isNaN(Number(id))) {
@@ -45,6 +46,7 @@ const getListing: RequestHandler = async (req: Request, res: Response) => {
       .select("*")
       .eq("item_id", parsedId)
       .single();
+
 
     if (error) {
       res.status(500).json({ error: error.message });

@@ -25,9 +25,9 @@ function App() {
           <Route
             path="/profile"
             element={
-              <PrivateRoute>
-                <ProfilePage />
-              </PrivateRoute>
+              //   <PrivateRoute>
+              <ProfilePage />
+              //   </PrivateRoute>
             }
           />
 
