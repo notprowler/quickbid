@@ -2,11 +2,25 @@ import supabase from "@/config/database";
 import type { Request, RequestHandler, Response } from "express";
 
 const getListings: RequestHandler = async (req: Request, res: Response) => {
+  const { category, minPrice, maxPrice } = req.query;
+
   try {
-    const { data, error } = await supabase.from("listings").select("*");
+    let query = supabase.from("listings").select("*");
+
+    if (category && category !== "All") {
+      query = query.eq("category", category);
+    }
+    if (minPrice) {
+      query = query.gte("price", Number(minPrice));
+    }
+    if (maxPrice) {
+      query = query.lte("price", Number(maxPrice));
+    }
+
+    const { data, error } = await query;
 
     if (error) {
-      res.status(500).json({ error: error.message });
+      throw res.status(500).json({ error: error.message });
     }
 
     res.status(200).json(data);
@@ -16,26 +30,32 @@ const getListings: RequestHandler = async (req: Request, res: Response) => {
 };
 
 const getListing: RequestHandler = async (req: Request, res: Response) => {
-  const { id } = req.params;
 
-  if (!id) {
-    res.status(400).json({ error: "Please provide a User ID" });
+  const id = req.params.id; // `req.params` contains route parameters
+
+  if (!id || isNaN(Number(id))) {
+    res.status(400).json({ error: "Invalid or missing listing ID" });
     return;
   }
+
+  const parsedId = Number(id);
 
   try {
     const { data, error } = await supabase
       .from("listings")
       .select("*")
-      .eq("owner_id", id)
-      .select();
+      .eq("item_id", parsedId)
+      .single();
+
 
     if (error) {
       res.status(500).json({ error: error.message });
+      return;
     }
 
     if (!data) {
       res.status(404).json({ error: "Listing not found" });
+      return;
     }
 
     res.status(200).json(data);

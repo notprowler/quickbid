@@ -3,6 +3,7 @@ import EditProfile from "../components/EditProfile";
 import AddFunds from "../components/AddFunds";
 import Rating from "../components/Rate";
 import axios from "axios";
+import TestImage from "../assets/cutedog.jpg";
 
 interface UserData {
   user_id: number;
@@ -13,9 +14,16 @@ interface UserData {
   password_hash: string;
   vip: boolean;
   balance: number;
+  profilePicture?: string; // Optional
   status: string;
   role: string;
   average_rating: number;
+  listings: {
+    id: number;
+    title: string;
+    price: number;
+    sold: boolean;
+  }[];
 }
 
 interface UserListings {
@@ -42,9 +50,10 @@ interface UserTransactions {
 }
 
 export default function ProfilePage() {
-  // const { user, isAuthenticated, logout } = useAuth0();
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  /* profile update states */
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
 
@@ -53,7 +62,6 @@ export default function ProfilePage() {
   /* user info, listings, and transactions state */
   const [userListings, setUserListings] = useState<UserListings[]>([]);
   const [showListings, setShowListings] = useState(false);
-  const [userData, setUserData] = useState<UserData | null>(null);
   const [userTransactions, setUserTransactions] = useState<
     UserTransactions[] | null
   >(null);
@@ -63,22 +71,58 @@ export default function ProfilePage() {
   const [showRate, setShowRate] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<UserListings | null>(null);
 
-  // const handleProfileUpdate = (updatedData: Partial<UserData>) => {
-  //   setUserData((prevData) => ({
-  //     ...prevData,
-  //     ...updatedData,
-  //   }));
-  // };
 
-  // function to get the clientSecret
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get("/api/users/profile", {
+          withCredentials: true,
+          validateStatus: (status) => status < 500,
+        });
+
+        console.log("Backend Response Data:", response.data);
+
+        if (response.status === 200 || response.status === 304) {
+          setUserData({
+            user_id: response.data.user_id || 0,
+            username: response.data.username || "Guest",
+            email: response.data.email || "No Email",
+            profilePicture: response.data.profilePicture || TestImage,
+            vip: response.data.vip || false,
+            balance: response.data.balance || 0,
+            average_rating: response.data.average_rating || 0,
+            listings: response.data.listings || [],
+          });
+          console.log("User Data State Set:", userData);
+        } else {
+          setError("Failed to load profile data.");
+          console.error("API Error Response:", response);
+        }
+      } catch (err) {
+        console.error("Error fetching profile data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  // Update profile data after editing
+  const handleProfileUpdate = (updatedData: Partial<UserData>) => {
+    setUserData((prevData) =>
+      prevData ? { ...prevData, ...updatedData } : null,
+    );
+  };
+
+  // Handle Stripe payment intent creation
   const handleOpenAddFunds = async (amount: number) => {
     try {
-      // call backend to make payment intent
       const response = await axios.post(
         "http://localhost:4000/create-payment-intent",
-        {
-          amount: amount * 100, // need amount in cents
-        },
+        { amount: amount * 100 }, // Amount in cents
+        { withCredentials: true },
       );
 
       setClientSecret(response.data.clientSecret);
@@ -88,51 +132,65 @@ export default function ProfilePage() {
     }
   };
 
-  // const handlePaymentSuccess = (amount: number) => {
-  //   setUserData((prevData) => ({
-  //     ...prevData,
-  //     balance: prevData.balance + amount,
-  //   }));
-  //   console.log("added funds:", amount);
-  // };
+// <<<<<<< feature/transactions_rating
 
-  // if (!isAuthenticated) {
-  //   return (
-  //     <div className="mt-10 text-center">
-  //       <h1 className="text-2xl font-bold">Access Denied</h1>
-  //       <p>Please log in to view your profile.</p>
-  //     </div>
-  //   );
-  // }
+//   async function fetchUserData(): Promise<void> {
+//     const res = await fetch("http://localhost:3000/api/users/104");
+//     if (!res.ok) {
+//       throw new Error(`No data returned for user. HTTP Status: ${res.status}`);
+//     }
 
-  async function fetchUserData(): Promise<void> {
-    const res = await fetch("http://localhost:3000/api/users/104");
-    if (!res.ok) {
-      throw new Error(`No data returned for user. HTTP Status: ${res.status}`);
-    }
+//     const user = await res.json();
 
-    const user = await res.json();
+//     setUserData(user);
+//   }
 
-    setUserData(user);
+//   async function fetchListingData(): Promise<void> {
+//     const res = await fetch("http://localhost:3000/api/listings/104");
+
+//     if (!res.ok) {
+//       throw new Error(
+//         `No listings returned for user. HTTP Status: ${res.status}`,
+//       );
+//     }
+
+//     const listings = await res.json();
+
+//     setUserListings(listings);
+//   }
+
+//   async function fetchTransactionData(): Promise<void> {
+//     const res = await fetch(
+//       "http://localhost:3000/api/transactions/seller/104",
+// =======
+  // Handle successful payment
+  const handlePaymentSuccess = (amount: number) => {
+    setUserData((prevData) =>
+      prevData ? { ...prevData, balance: prevData.balance + amount } : null,
+    );
+    console.log("Added funds:", amount);
+  };
+
+  if (loading) {
+    return <div>Loading profile...</div>;
   }
 
-  async function fetchListingData(): Promise<void> {
-    const res = await fetch("http://localhost:3000/api/listings/104");
-
-    if (!res.ok) {
-      throw new Error(
-        `No listings returned for user. HTTP Status: ${res.status}`,
-      );
-    }
-
-    const listings = await res.json();
-
-    setUserListings(listings);
+  if (error) {
+    return (
+      <div className="mt-10 text-center">
+        <h1 className="text-2xl font-bold">Error</h1>
+        <p>{error}</p>
+      </div>
+    );
   }
 
-  async function fetchTransactionData(): Promise<void> {
-    const res = await fetch(
-      "http://localhost:3000/api/transactions/seller/104",
+  if (!userData) {
+    return (
+      <div className="mt-10 text-center">
+        <h1 className="text-2xl font-bold">Access Denied</h1>
+        <p>Please log in to view your profile.</p>
+      </div>
+
     );
 
     if (!res.ok) {
@@ -168,11 +226,12 @@ export default function ProfilePage() {
       {/* User Information Card */}
       <div className="mb-6 flex items-center gap-4 rounded-lg px-8 py-4 shadow-md">
         <img
-          src="https://static.wikia.nocookie.net/among-us-wiki/images/8/84/Among_Us.png/revision/latest?cb=20240408020746"
+          src={userData.profilePicture || TestImage}
           alt="User Avatar"
           className="h-36 w-36 rounded-full object-cover"
         />
         <div>
+
           <div className="px-4">
             <h2 className="text-2xl font-bold">{userData?.username}</h2>
             <p className="text-xl text-gray-600">{userData?.email}</p>
@@ -188,7 +247,7 @@ export default function ProfilePage() {
             <div>
               <p className="text-sm font-semibold">Balance</p>
               <p className="text-xl font-bold">
-                ${userData?.balance.toFixed(2)}
+                ${userData.balance ? userData.balance.toFixed(2) : "0.00"}
               </p>
             </div>
             <div>
@@ -200,17 +259,18 @@ export default function ProfilePage() {
               <p className="text-xl font-bold">{userData.ratings.count}</p>
             </div> */}
           </div>
+
           <div className="space-x-20">
             <button
               onClick={() => setIsEditProfileOpen(true)}
-              className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+              className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition hover:bg-slate-200"
             >
               Edit Profile
             </button>
 
             <button
-              onClick={() => setIsAddFundsOpen(true)}
-              className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+              onClick={() => handleOpenAddFunds(50)} // Example amount
+              className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition hover:bg-slate-200"
             >
               Add Funds
             </button>
@@ -218,16 +278,18 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Listings Toggle Section */}
-      <div className="mb-2 flex items-center justify-between">
+      {/* Listings */}
+      <div className="mb-2">
         <button
           onClick={() => setShowListings(!showListings)}
-          className="flex w-full items-center justify-between rounded-lg px-4 py-3"
+          className="w-full px-4 py-2 text-left"
         >
-          <span className="text-2xl font-bold">View Your Listings</span>
-          <span className="text-xl">{showListings ? "▲" : "▼"}</span>
+          <span className="text-2xl font-bold">
+            {showListings ? "Hide Listings" : "View Listings"}
+          </span>
         </button>
       </div>
+
       <hr className="mb-4" />
       <div
         className={`overflow-hidden transition-all duration-300 ease-in-out ${
@@ -346,20 +408,29 @@ export default function ProfilePage() {
       <EditProfile
         isOpen={isEditProfileOpen}
         onClose={() => setIsEditProfileOpen(false)}
-        userData={userData}
-        onUpdate={handleProfileUpdate}
+        userData={{
+          name: userData.username,
+          email: userData.email,
+          username: userData.username,
+          profilePicture: userData.profilePicture || "",
+        }}
+        onUpdate={(updatedData) => {
+          setUserData((prev) => (prev ? { ...prev, ...updatedData } : prev));
+        }}
       />
 
+      {/* Add Funds Modal */}
+                
       <AddFunds
         isOpen={isAddFundsOpen}
         onClose={() => {
           setIsAddFundsOpen(false);
-          setClientSecret(null); // Reset clientSecret for the next transaction
+          setClientSecret(null); // Reset clientSecret for next transaction
         }}
         clientSecret={clientSecret}
         onPaymentSuccess={handlePaymentSuccess}
         onRequestPayment={handleOpenAddFunds}
-      /> */}
+      /> 
 
       {/* Logout Button
       <button

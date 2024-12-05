@@ -1,30 +1,23 @@
 import { FaUser, FaShoppingCart, FaTimes, FaBars } from "react-icons/fa";
-// import { useAuth0 } from "@auth0/auth0-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 export default function Navbar() {
-  // const { user, isAuthenticated, loginWithRedirect, isLoading } = useAuth0();
-  const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [cartCount, setCartCount] = useState<number>(0);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const navigate = useNavigate();
+  const { authenticated, loading } = useAuth();
 
-  // useEffect(() => {
-  //   if (isAuthenticated && user?.picture) {
-  //     setUserAvatar(user.picture);
-  //   } else {
-  //     setUserAvatar(null);
-  //   }
-  // }, [isAuthenticated, user]);
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
   const handleCartClick = () => {
     navigate("/cart");
   };
 
   const handleAvatarClick = () => {
-    if (isLoading) return; // Wait for the authentication state to load
-    if (isAuthenticated) {
+    if (loading) return; // Wait for the authentication state to load
+    if (authenticated) {
       navigate("/profile");
     } else {
       navigate("/login");

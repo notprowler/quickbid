@@ -1,6 +1,38 @@
 import supabase from "@/config/database";
 import type { Request, RequestHandler, Response } from "express";
 
+const getUserProfile: RequestHandler = async (req, res) => {
+  console.log("Accessed /profile endpoint");
+  const userId = req.user?.user_id; // Check JWT payload structure
+
+  console.log("Authenticated User ID:", userId);
+
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized. User ID is required." });
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .select("user_id, username, email, vip, balance, average_rating") // MIGHT ADD MORE FIELDS HERE LATER
+      .eq("user_id", userId)
+      .single();
+
+    if (error) {
+      console.error("Supabase Error:", error);
+      res.status(500).json({ error: "Failed to fetch user profile." });
+      return;
+    }
+
+    console.log("Fetched User Data:", data);
+    res.status(200).json(data);
+  } catch (err) {
+    console.error("Error in getUserProfile:", err);
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
+
 const getUser: RequestHandler = async (req: Request, res: Response) => {
   const { id } = req.params;
 
@@ -8,7 +40,6 @@ const getUser: RequestHandler = async (req: Request, res: Response) => {
     res.status(400).json({ error: "Please provide a User ID" });
     return;
   }
-
   try {
     const { data, error } = await supabase
       .from("users")
@@ -121,17 +152,15 @@ Helper to update average ratings column after new update:
 Formula: (1 * a + 2 * b + 3 * c + 4 * d + 5 * e) / R WHERE
 a, b, c, d, e = number of ratings corresponding to 1-5 AND R = ratings
 */
-const updateAverageRating: (userRatings: any) => Promise<void> = async (
-  userRatings
-) => {
+const updateAverageRating: (userRatings: any) => Promise<void> = async ( userRatings ) => {
   const R =
     userRatings.one_ratings +
     userRatings.two_ratings +
     userRatings.three_ratings +
     userRatings.four_ratings +
     userRatings.five_ratings;
-  const sum =
-    (1 * userRatings.one_ratings +
+
+  const sum = (1 * userRatings.one_ratings +
       2 * userRatings.two_ratings +
       3 * userRatings.three_ratings +
       4 * userRatings.four_ratings +
@@ -194,6 +223,7 @@ const updateUserRating: RequestHandler = async (
   }
 };
 
+
 const newUserComplaint: RequestHandler = async (
   req: Request,
   res: Response
@@ -208,6 +238,7 @@ const newUserComplaint: RequestHandler = async (
 
   try {
     const { data, error } = await supabase
+
       .from("complaints")
       .insert([
         {
@@ -241,4 +272,5 @@ export {
   updateUserStatus,
   updateUserRating,
   newUserComplaint,
+  getUserProfile,
 };

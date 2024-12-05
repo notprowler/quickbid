@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import cutedog from "../assets/cutedog.jpg";
-import Rating from "../components/Rate";
-
+import cutedog from "../assets/
 interface Item {
-  id: number;
+  item_id: number;
   title: string;
   price: number;
   userHighestBid?: number;
@@ -12,7 +10,7 @@ interface Item {
   imageUrl: string;
   bidEndTime?: string;
   transactionType: "sell" | "bid";
-  awaitingApproval?: boolean;
+  al?: boolean;
 }
 
 interface UserTransactions {
@@ -72,29 +70,35 @@ const CartPage: React.FC = () => {
   ]);
 
   const [timers, setTimers] = useState<{ [id: number]: string }>({});
-
+  const [items, setItems] = useState<Item[]>([]);
   const [boughtItems, setBoughtItems] = useState<UserTransactions[]>([]);
   const [showBoughtItems, setShowBoughtItems] = useState<boolean>(false);
   const [showRate, setShowRate] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<UserTransactions>();
+
   const navigate = useNavigate();
 
+  // Timer logic for auction items
   useEffect(() => {
     const updateTimers = () => {
       const now = Date.now();
       const newTimers: { [id: number]: string } = {};
 
       items.forEach((item) => {
-        const timeLeft = new Date(item.bidEndTime).getTime() - now;
-        if (timeLeft > 0) {
-          const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-          const minutes = Math.floor(
-            (timeLeft % (1000 * 60 * 60)) / (1000 * 60),
-          );
-          const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-          newTimers[item.id] = `${hours}h ${minutes}m ${seconds}s`;
-        } else {
-          newTimers[item.id] = "Expired";
+        if (item.type === "bid" && item.status === "active") {
+          const bidEndTime = new Date(item.created_at).getTime() + 3600 * 1000; // Assume 1-hour auctions
+          const timeLeft = bidEndTime - now;
+
+          if (timeLeft > 0) {
+            const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+            const minutes = Math.floor(
+              (timeLeft % (1000 * 60 * 60)) / (1000 * 60),
+            );
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            newTimers[item.item_id] = `${hours}h ${minutes}m ${seconds}s`;
+          } else {
+            newTimers[item.item_id] = "Expired";
+          }
         }
       });
 
@@ -102,7 +106,7 @@ const CartPage: React.FC = () => {
     };
 
     const interval = setInterval(updateTimers, 1000);
-    return () => clearInterval(interval); // Cleanup on component unmount
+    return () => clearInterval(interval);
   }, [items]);
 
   useEffect(() => {
@@ -141,27 +145,13 @@ const CartPage: React.FC = () => {
 
       {/* Main Content: Cart Items and Summary */}
       <div className="flex flex-col gap-6 md:flex-row">
-        {/* Cart Items */}
         <div className="flex-1 space-y-4">
           {items.map((item) => (
             <div
-              key={item.id}
+              key={item.item_id}
               className="relative flex cursor-pointer items-center gap-4 rounded-lg p-4 shadow-md transition duration-300 ease-in-out hover:-translate-y-2"
+              onClick={() => navigate(`/item/${item.item_id}`)}
             >
-              {/* LOSING or Awaiting Approval tag */}
-              {item.transactionType === "bid" &&
-                (item.userHighestBid ?? 0) < (item.currentHighestBid ?? 0) &&
-                !item.awaitingApproval && (
-                  <span className="absolute right-2 top-2 rounded-full bg-red-500 px-3 py-1 text-sm font-bold text-white">
-                    LOSING
-                  </span>
-                )}
-              {item.awaitingApproval && (
-                <span className="absolute right-2 top-2 rounded-full bg-yellow-500 px-3 py-1 text-sm font-bold text-white">
-                  Awaiting Approval
-                </span>
-              )}
-              {/* Item Image */}
               <img
                 src={item.imageUrl}
                 alt={item.title}

@@ -190,6 +190,39 @@ export type Database = {
           }
         ];
       };
+      pending_users: {
+        Row: {
+          address: string;
+          created_at: string | null;
+          email: string;
+          full_name: string;
+          id: number;
+          password_hash: string;
+          status: string | null;
+          username: string;
+        };
+        Insert: {
+          address: string;
+          created_at?: string | null;
+          email: string;
+          full_name: string;
+          id?: number;
+          password_hash: string;
+          status?: string | null;
+          username: string;
+        };
+        Update: {
+          address?: string;
+          created_at?: string | null;
+          email?: string;
+          full_name?: string;
+          id?: number;
+          password_hash?: string;
+          status?: string | null;
+          username?: string;
+        };
+        Relationships: [];
+      };
       ratings: {
         Row: {
           created_at: string;
@@ -290,6 +323,7 @@ export type Database = {
           balance: number;
           created_at: string;
           email: string;
+          full_name: string | null;
           password_hash: string;
           role: string;
           status: string;
@@ -303,6 +337,7 @@ export type Database = {
           balance?: number;
           created_at?: string;
           email: string;
+          full_name?: string | null;
           password_hash: string;
           role?: string;
           status?: string;
@@ -316,6 +351,7 @@ export type Database = {
           balance?: number;
           created_at?: string;
           email?: string;
+          full_name?: string | null;
           password_hash?: string;
           role?: string;
           status?: string;

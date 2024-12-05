@@ -1,83 +1,57 @@
-import React, { useState } from "react";
-import cutedog from "../assets/cutedog.jpg";
-import { FaFilter } from "react-icons/fa";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-interface Product {
-  id: number;
-  name: string;
-  price: number;
+import { getListings } from "../api/listingsApi";
+
+import { FaFilter } from "react-icons/fa";
+
+interface Listing {
+  item_id: number;
+  title: string;
   description: string;
-  image: string;
+  price: number;
+  type: "sell" | "bid";
   category: string;
-  transactionType: "sell" | "bid";
+  image: string;
 }
 
-const mockProducts: Product[] = [
-  {
-    id: 1,
-    name: "Product 1",
-    price: 29.99,
-    description: "A great product!",
-    image: cutedog,
-    category: "Clothes",
-    transactionType: "sell",
-  },
-  {
-    id: 2,
-    name: "Product 2",
-    price: 19.99,
-    description: "Another amazing product!",
-    image: cutedog,
-    category: "Electronics",
-    transactionType: "bid",
-  },
-  {
-    id: 3,
-    name: "Product 3",
-    price: 49.99,
-    description: "Premium quality product.",
-    image: cutedog,
-    category: "Furniture",
-    transactionType: "sell",
-  },
-  {
-    id: 4,
-    name: "Product 4",
-    price: 39.99,
-    description: "Highly recommended by customers.",
-    image: cutedog,
-    category: "Vehicles",
-    transactionType: "bid",
-  },
-  {
-    id: 4,
-    name: "Product 4",
-    price: 39.99,
-    description: "Highly recommended by customers.",
-    image: cutedog,
-    category: "Vehicles",
-    transactionType: "bid",
-  },
-];
-
 export default function Listings() {
+  // states for loading listings from backend
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // states for search bar
   const [searchTerm, setSearchTerm] = useState("");
   const [query, setQuery] = useState("");
+
+  // states for filter function
   const [showModal, setShowModal] = useState(false);
 
-  // navigate to corresponding product
-  const navigate = useNavigate();
-
-  // default filter states
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
 
-  // applied filter states
   const [appliedCategory, setAppliedCategory] = useState("All");
   const [appliedMinPrice, setAppliedMinPrice] = useState<number | null>(null);
   const [appliedMaxPrice, setAppliedMaxPrice] = useState<number | null>(null);
+
+  // navigate to corresponding product
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchListings = async () => {
+      try {
+        const data = await getListings();
+        setListings(data);
+      } catch (error) {
+        console.error("Error fetching listings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchListings();
+  });
 
   const handleSearchClick = () => {
     setQuery(searchTerm);
@@ -87,11 +61,26 @@ export default function Listings() {
     setShowModal((prev) => !prev);
   };
 
-  const applyFilters = () => {
+  const applyFilters = async () => {
     setShowModal(false);
+
     setAppliedCategory(selectedCategory);
-    setAppliedMinPrice(minPrice ? parseFloat(minPrice) : null);
-    setAppliedMaxPrice(maxPrice ? parseFloat(maxPrice) : null);
+    setAppliedMinPrice(minPrice ? Number(minPrice) : null);
+    setAppliedMaxPrice(maxPrice ? Number(maxPrice) : null);
+
+    const filters: Record<string, string> = {};
+    if (minPrice) filters.minPrice = minPrice;
+    if (maxPrice) filters.maxPrice = maxPrice;
+    if (selectedCategory !== "All") filters.category = selectedCategory;
+
+    const queryString = `?${new URLSearchParams(filters).toString()}`;
+
+    try {
+      const data = await getListings(queryString);
+      setListings(data);
+    } catch (error) {
+      console.error("Error applying filters:", error);
+    }
   };
 
   const resetFilters = () => {
@@ -111,17 +100,19 @@ export default function Listings() {
     appliedMinPrice !== null ||
     appliedMaxPrice !== null;
 
-  const filteredProducts = mockProducts.filter((product) => {
-    const matchesSearch = product.name
+  const filteredListings = listings.filter((listing) => {
+    const matchesSearch = listing.title
       .toLowerCase()
       .includes(query.toLowerCase());
     const matchesCategory =
-      appliedCategory === "All" || product.category === appliedCategory;
+      appliedCategory === "All" || listing.category === appliedCategory;
     const matchesPrice =
-      (!appliedMinPrice || product.price >= appliedMinPrice) &&
-      (!appliedMaxPrice || product.price <= appliedMaxPrice);
+      (!appliedMinPrice || listing.price >= appliedMinPrice) &&
+      (!appliedMaxPrice || listing.price <= appliedMaxPrice);
     return matchesSearch && matchesCategory && matchesPrice;
   });
+
+  if (loading) return <div>Loading listings...</div>;
 
   return (
     <div className="p-4">
@@ -233,21 +224,23 @@ export default function Listings() {
 
       {/* Product Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-        {filteredProducts.map((product) => (
+        {filteredListings.map((listing) => (
           <div
-            key={product.id}
+            key={listing.item_id}
             className="cursor-pointer rounded-lg border px-4 py-4 shadow transition-shadow hover:shadow-lg"
-            onClick={() => navigate(`/item/${product.id}`)}
+            onClick={() => navigate(`/item/${listing.item_id}`)}
           >
             <img
-              src={product.image}
-              alt={product.name}
+              src={listing.image}
+              alt={listing.title}
               className="mb-2 h-64 w-full rounded object-cover"
             />
-            <h3 className="text-lg font-semibold">{product.name}</h3>
-            <p className="text-gray-700">${product.price.toFixed(2)}</p>
+            <h3 className="text-lg font-semibold">{listing.title}</h3>
+            <p className="text-gray-700">
+              ${Number(listing.price || 0).toFixed(2)}
+            </p>
             <span className="text-sm font-medium text-gray-600">
-              {product.transactionType === "sell" ? "For Sale" : "Auction"}
+              {listing.type === "sell" ? "For Sale" : "Auction"}
             </span>
           </div>
         ))}

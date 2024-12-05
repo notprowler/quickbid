@@ -10,6 +10,7 @@ import usersRoutes from "@/routes/users";
 import bidRouter from "@/routes/bids";
 import transactionsRouter from "@/routes/transactions";
 import transactionsController from "./controllers/transactions.Controller";
+import registerRoutes from "@/routes/register";
 
 import authRouter from "@/routes/auth";
 
@@ -18,7 +19,13 @@ import authRouter from "@/routes/auth";
 const app: Application = express();
 const PORT = process.env.SERVER_PORT || 3000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: "GET,POST,PUT,DELETE,PATCH",
+    credentials: true,
+  })
+);
 
 app.use(cookieParser());
 app.use(express.json());
@@ -38,6 +45,8 @@ app.use("/api/users", usersRoutes);
 app.use("/api/bids", bidRouter);
 app.use("/api/transactions", transactionsRouter);
 app.use("/auth", authRouter);
+
+app.use("/api/visitors/register", registerRoutes);
 
 // // Stripe API for adding funds to account
 // app.post("/create-payment-intent", async (req, res) => {

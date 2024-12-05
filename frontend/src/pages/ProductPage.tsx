@@ -1,17 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { FaRegHeart, FaHeart } from "react-icons/fa";
-import cutedog from "../assets/cutedog.jpg";
+import { getListing } from "../api/listingsApi";
 
 // -------------------- Product Interface --------------------
 interface Product {
-  id: number;
-  name: string;
+  item_id: number;
+  title: string;
   price: number;
   description: string;
   image: string;
   category: string;
-  transactionType: "sell" | "bid";
+  type: "sell" | "bid";
 }
 
 // -------------------- Review Interface --------------------
@@ -24,46 +23,7 @@ interface Review {
   rating: number;
 }
 
-// -------------------- Mock Data --------------------
-const mockProducts: Product[] = [
-  {
-    id: 1,
-    name: "Product 1",
-    price: 29.99,
-    description: "A great product!",
-    image: cutedog,
-    category: "Clothes",
-    transactionType: "sell",
-  },
-  {
-    id: 2,
-    name: "Product 2",
-    price: 19.99,
-    description: "Another amazing product!",
-    image: cutedog,
-    category: "Electronics",
-    transactionType: "bid",
-  },
-  {
-    id: 3,
-    name: "Product 3",
-    price: 49.99,
-    description: "Premium quality product.",
-    image: cutedog,
-    category: "Furniture",
-    transactionType: "sell",
-  },
-  {
-    id: 4,
-    name: "Product 4",
-    price: 39.99,
-    description: "Highly recommended by customers.",
-    image: cutedog,
-    category: "Vehicles",
-    transactionType: "bid",
-  },
-];
-
+// -------------------- Reviews (Mock for Now) --------------------
 const reviews: Review[] = [
   {
     id: 1,
@@ -93,13 +53,9 @@ const reviews: Review[] = [
 
 // -------------------- ProductSell Component --------------------
 export function ProductSell({ productDetails }: { productDetails: Product }) {
-  const [favorite, setFavorite] = useState(false);
-
-  const handleFavorite = () => setFavorite(!favorite);
-
   const handlePurchase = () => {
     alert(
-      `You have purchased ${productDetails.name} for $${productDetails.price}!`,
+      `You have purchased ${productDetails.title} for $${productDetails.price}!`,
     );
   };
 
@@ -108,22 +64,14 @@ export function ProductSell({ productDetails }: { productDetails: Product }) {
       <div className="flex items-center justify-center">
         <div className="relative aspect-square w-full rounded-lg bg-gray-200">
           <img
-            src={productDetails.image}
-            alt={productDetails.name}
+            src={productDetails.image || "/placeholder-image.jpg"} // Placeholder if no image
+            alt={productDetails.title}
             className="h-full w-full rounded-lg object-cover"
           />
-          <div className="absolute left-4 top-4 rounded-full bg-white p-2 shadow-md">
-            <span
-              onClick={handleFavorite}
-              className="cursor-pointer text-xl text-gray-800"
-            >
-              {favorite ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
-            </span>
-          </div>
         </div>
       </div>
       <div className="flex flex-col space-y-4">
-        <h1 className="text-2xl font-bold">{productDetails.name}</h1>
+        <h1 className="text-2xl font-bold">{productDetails.title}</h1>
         <div className="text-4xl font-bold text-gray-800">
           ${productDetails.price}
         </div>
@@ -146,8 +94,7 @@ export function ProductSell({ productDetails }: { productDetails: Product }) {
 
 // -------------------- ProductBid Component --------------------
 export function ProductBid({ productDetails }: { productDetails: Product }) {
-  const [favorite, setFavorite] = useState(false);
-  const [currentBid, setCurrentBid] = useState(50); // Example starting bid
+  const [currentBid, setCurrentBid] = useState(productDetails.price);
   const [newBid, setNewBid] = useState("");
 
   const handleBid = () => {
@@ -161,29 +108,19 @@ export function ProductBid({ productDetails }: { productDetails: Product }) {
     }
   };
 
-  const handleFavorite = () => setFavorite(!favorite);
-
   return (
     <div className="mx-auto mt-8 grid max-w-6xl grid-cols-1 gap-10 p-6 lg:grid-cols-2">
       <div className="flex items-center justify-center">
         <div className="relative aspect-square w-full rounded-lg bg-gray-200">
           <img
-            src={productDetails.image}
-            alt={productDetails.name}
+            src={productDetails.image || "/placeholder-image.jpg"}
+            alt={productDetails.title}
             className="h-full w-full rounded-lg object-cover"
           />
-          <div className="absolute left-4 top-4 rounded-full bg-white p-2 shadow-md">
-            <span
-              onClick={handleFavorite}
-              className="cursor-pointer text-xl text-gray-800"
-            >
-              {favorite ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
-            </span>
-          </div>
         </div>
       </div>
       <div className="flex flex-col space-y-4">
-        <h1 className="text-2xl font-bold">{productDetails.name}</h1>
+        <h1 className="text-2xl font-bold">{productDetails.title}</h1>
         <div className="text-4xl font-bold text-gray-800">
           Current Bid: ${currentBid}
         </div>
@@ -213,7 +150,6 @@ export function ProductBid({ productDetails }: { productDetails: Product }) {
   );
 }
 
-// -------------------- ReviewBox Component --------------------
 export function ReviewBox({ review }: { review: Review }) {
   return (
     <div className="flex h-[200px] w-full flex-col justify-between rounded-lg border bg-white p-5 shadow-sm sm:h-[250px] md:h-[300px]">
@@ -234,21 +170,35 @@ export function ReviewBox({ review }: { review: Review }) {
 // -------------------- ProductPage Component --------------------
 export default function ProductPage() {
   const { itemID } = useParams<{ itemID: string }>();
+  const [productDetails, setProductDetails] = useState<Product | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Find the product based on itemID
-  const productDetails = mockProducts.find(
-    (product) => product.id === Number(itemID),
-  );
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        if (itemID) {
+          const data = await getListing(itemID!);
+          setProductDetails(data);
+        }
+      } catch (err) {
+        setError("Failed to load product details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (itemID) {
+      fetchProduct();
+    }
+  }, [itemID]);
 
-  if (!productDetails) {
-    return (
-      <div className="p-10 text-center text-gray-700">Product not found.</div>
-    );
-  }
+  if (loading) return <div>Loading product details...</div>;
+  if (error) return <div>{error}</div>;
+  if (!productDetails) return <div>Product not found.</div>;
 
   return (
     <div className="min-h-screen bg-white p-4">
-      {productDetails.transactionType === "sell" ? (
+      {productDetails.type === "sell" ? (
         <ProductSell productDetails={productDetails} />
       ) : (
         <ProductBid productDetails={productDetails} />
