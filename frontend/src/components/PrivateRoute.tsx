@@ -1,13 +1,17 @@
-import { useAuth0 } from "@auth0/auth0-react";
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 interface PrivateRouteProps {
   children: JSX.Element;
 }
 
 export default function PrivateRoute({ children }: PrivateRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth0();
+  const { authenticated, loading } = useAuth();
 
-  if (isLoading) return <div>Loading...</div>;
-  return isAuthenticated ? children : <Navigate to="/" />;
+  console.log("PrivateRoute - Authenticated:", authenticated);
+  console.log("PrivateRoute - Loading:", loading);
+
+  if (loading) return <div>Loading...</div>;
+
+  return authenticated ? children : <Navigate to="/" />;
 }

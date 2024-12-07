@@ -1,8 +1,6 @@
-import Footer from "../components/Footer";
 import shoppingBag from "../assets/shopping-bag.jpeg";
 import device from "../assets/device.jpeg";
 import furniture from "../assets/furniture.jpeg";
-import foodImg from "../assets/food.jpeg";
 import clothing from "../assets/clothing.jpg";
 
 const LandingPage = () => {
@@ -72,8 +70,6 @@ const LandingPage = () => {
           Show more
         </a>
       </div>
-
-      <Footer />
     </>
   );
 };
