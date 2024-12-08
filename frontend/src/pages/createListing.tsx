@@ -8,7 +8,8 @@ const CreateListing: React.FC = () => {
     const [price, setPrice] = useState('');
     const [category, setCategory] = useState('');
     const [ownerId, setOwnerId] = useState('');
-    const [image, setImage] = useState<File | null>(null);
+    const [images, setImages] = useState<File[]>([]);
+    const [successMessage, setSuccessMessage] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -18,39 +19,12 @@ const CreateListing: React.FC = () => {
         formData.append('type', type);
         formData.append('price', price);
         formData.append('category', category);
-        formData.append('owner_id', ownerId);
-        if (image) {
-            formData.append('image', image);
-        }
+        formData.append('owner_id', ownerId || '104'); // Add a default owner_id for testing
 
-        const [userId, setUserId] = useState(null);
-
-        // I will be implementing this endpoint for checking the user and giving back user_id 
-
-        // useEffect(() => {
-        //     // Fetch the user ID when the page loads
-        //     const fetchUserId = async () => {
-        //         try {
-        //             const response = await fetch('/api/verify', {
-        //                 method: 'GET',
-        //                 headers: {
-        //                     'Content-Type': 'application/json',
-        //                     'X-User-Email': 'user1@example.com', // Example: Pass authentication info
-        //                 },
-        //             });
-        //             if (response.ok) {
-        //                 const data = await response.json();
-        //                 setUserId(data.id);
-        //             } else {
-        //                 console.error('Failed to fetch user ID');
-        //             }
-        //         } catch (error) {
-        //             console.error('Error:', error);
-        //         }
-        //     };
-    
-        //     fetchUserId();
-        // }, []);
+        // Append multiple images
+        images.forEach((image) => {
+            formData.append('images', image);
+        });
         
         try {
             const response = await axios.post('http://localhost:3000/api/listings', formData, {
@@ -59,6 +33,10 @@ const CreateListing: React.FC = () => {
                 },
             });
             console.log('Listing created:', response.data);
+            
+            // Show success message
+            setSuccessMessage('Listing created!');
+
             // Reset form fields
             setTitle('');
             setDescription('');
@@ -66,15 +44,32 @@ const CreateListing: React.FC = () => {
             setPrice('');
             setCategory('');
             setOwnerId('');
-            setImage(null);
+            setImages([]);
+
+            // Clear success message after 3 seconds
+            setTimeout(() => setSuccessMessage(''), 10000);
         } catch (error) {
             console.error('Error creating listing:', error);
+            console.error('Error response:', error.response);
+        }
+    };
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            // Convert FileList to Array and limit to 5 images
+            const fileArray = Array.from(e.target.files).slice(0, 5);
+            setImages(fileArray);
         }
     };
 
     return (
         <div className="max-w-lg mx-auto p-6 border border-gray-300 rounded-lg bg-white">
             <h1 className="text-2xl font-bold mb-4">Create Listing</h1>
+            {successMessage && (
+                <div className="bg-green-500 text-white p-2 mb-4 rounded">
+                    {successMessage}
+                </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="form-group">
                     <label className="block font-semibold mb-1">Title:</label>
@@ -83,6 +78,7 @@ const CreateListing: React.FC = () => {
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded"
+                        required
                     />
                 </div>
                 <div className="form-group">
@@ -91,6 +87,7 @@ const CreateListing: React.FC = () => {
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded"
+                        required
                     />
                 </div>
                 <div className="form-group">
@@ -99,19 +96,21 @@ const CreateListing: React.FC = () => {
                         value={type}
                         onChange={(e) => setType(e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded"
+                        required
                     >
                         <option value="sell">Sell</option>
                         <option value="auction">Auction</option>
-                        <option value="auction">Rent</option>
+                        <option value="rent">Rent</option>
                     </select>
                 </div>
                 <div className="form-group">
                     <label className="block font-semibold mb-1">Price:</label>
                     <input
-                        type="text"
+                        type="number"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded"
+                        required
                     />
                 </div>
                 <div className="form-group">
@@ -121,17 +120,28 @@ const CreateListing: React.FC = () => {
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded"
+                        required
                     />
                 </div>
                 <div className="form-group">
-                    <label className="block font-semibold mb-1">Image:</label>
+                    <label className="block font-semibold mb-1">Images (up to 5):</label>
                     <input
                         type="file"
-                        onChange={(e) => setImage(e.target.files ? e.target.files[0] : null)}
+                        multiple
+                        accept="image/*"
+                        onChange={handleImageChange}
                         className="w-full p-2 border border-gray-300 rounded"
                     />
+                    {images.length > 0 && (
+                        <div className="mt-2 text-sm text-gray-600">
+                            {images.length} image(s) selected
+                        </div>
+                    )}
                 </div>
-                <button type="submit" className="w-full py-2 px-4 bg-blue-500 text-white font-semibold rounded hover:bg-blue-700">
+                <button 
+                    type="submit" 
+                    className="w-full py-2 px-4 bg-blue-500 text-white font-semibold rounded hover:bg-blue-700"
+                >
                     Create Listing
                 </button>
             </form>
