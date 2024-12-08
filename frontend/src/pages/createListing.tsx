@@ -50,6 +50,7 @@ const CreateListing: React.FC = () => {
             setTimeout(() => setSuccessMessage(''), 10000);
         } catch (error) {
             console.error('Error creating listing:', error);
+            //@ts-ignore
             console.error('Error response:', error.response);
         }
     };

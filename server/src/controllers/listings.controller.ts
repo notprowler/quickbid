@@ -80,8 +80,8 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ error: err.message });
     }
 
-    console.log('Request body:', req.body);
-    console.log('Request files:', req.files);
+    // console.log('Request body:', req.body);
+    // console.log('Request files:', req.files);
 
     const { owner_id, type, title, description, price, category } = req.body;
     
