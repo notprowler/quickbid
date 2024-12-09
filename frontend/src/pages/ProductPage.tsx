@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getListing } from "../api/listingsApi";
+import axios from "axios";
 
 // -------------------- Product Interface --------------------
 interface Product {
@@ -10,6 +10,8 @@ interface Product {
   description: string;
   image: string;
   category: string;
+  status: string;
+  created_at: string;
   type: "sell" | "bid";
 }
 
@@ -52,40 +54,52 @@ const reviews: Review[] = [
 ];
 
 // -------------------- ProductSell Component --------------------
-export function ProductSell({ productDetails }: { productDetails: Product }) {
+export function ProductSell({ productDetails }: { productDetails: Product | undefined }) {
+
   const handlePurchase = () => {
     alert(
-      `You have purchased ${productDetails.title} for $${productDetails.price}!`,
+      `You have purchased ${productDetails?.title} for $${productDetails?.price}!`,
     );
   };
+
 
   return (
     <div className="mx-auto mt-8 grid max-w-6xl grid-cols-1 gap-10 p-6 lg:grid-cols-2">
       <div className="flex items-center justify-center">
         <div className="relative aspect-square w-full rounded-lg bg-gray-200">
           <img
-            src={productDetails.image || "/placeholder-image.jpg"} // Placeholder if no image
-            alt={productDetails.title}
+            src={productDetails?.image || "/placeholder-image.jpg"} // Placeholder if no image
+            alt={productDetails?.title}
             className="h-full w-full rounded-lg object-cover"
           />
         </div>
       </div>
       <div className="flex flex-col space-y-4">
-        <h1 className="text-2xl font-bold">{productDetails.title}</h1>
+        <h1 className="text-2xl font-bold">{productDetails?.title}</h1>
         <div className="text-4xl font-bold text-gray-800">
-          ${productDetails.price}
+          ${productDetails?.price}
         </div>
-        <button
-          onClick={handlePurchase}
-          className="duration:200 rounded-lg bg-[#3A5B22] px-4 py-2 text-white transition ease-in-out hover:bg-[#2F4A1A]"
-        >
-          Buy Now
-        </button>
+        {
+          productDetails?.status != 'active' ?
+            <button
+              disabled={true}
+              className="duration:200 rounded-lg bg-rose-800 px-4 py-2 text-white transition ease-in-out hover:bg-rose-700"
+            >
+              Sold
+            </button>
+            :
+            <button
+              onClick={handlePurchase}
+              className="duration:200 rounded-lg bg-[#3A5B22] px-4 py-2 text-white transition ease-in-out hover:bg-[#2F4A1A]"
+            >
+              Buy Now
+            </button>
+        }
         <details className="rounded-lg border border-gray-300 p-4">
           <summary className="cursor-pointer font-semibold">
             Description
           </summary>
-          <p className="mt-2 text-gray-600">{productDetails.description}</p>
+          <p className="mt-2 text-gray-600">{productDetails?.description}</p>
         </details>
       </div>
     </div>
@@ -94,6 +108,7 @@ export function ProductSell({ productDetails }: { productDetails: Product }) {
 
 // -------------------- ProductBid Component --------------------
 export function ProductBid({ productDetails }: { productDetails: Product }) {
+
   const [currentBid, setCurrentBid] = useState(productDetails.price);
   const [newBid, setNewBid] = useState("");
 
@@ -107,6 +122,7 @@ export function ProductBid({ productDetails }: { productDetails: Product }) {
       alert("Your bid must be higher than the current bid.");
     }
   };
+
 
   return (
     <div className="mx-auto mt-8 grid max-w-6xl grid-cols-1 gap-10 p-6 lg:grid-cols-2">
@@ -169,36 +185,40 @@ export function ReviewBox({ review }: { review: Review }) {
 
 // -------------------- ProductPage Component --------------------
 export default function ProductPage() {
-  const { itemID } = useParams<{ itemID: string }>();
+  const { id } = useParams();
   const [productDetails, setProductDetails] = useState<Product | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        if (itemID) {
-          const data = await getListing(itemID!);
-          setProductDetails(data);
+        if (id) {
+          const res = await axios.get(`http://localhost:3000/api/listings/product/${id}`,
+            {
+              withCredentials: true
+            }
+          );
+
+          if (!res.data) {
+            throw new Error();
+          }
+          console.log("Product Page", res.data);
+
+          setProductDetails(res.data);
         }
       } catch (err) {
-        setError("Failed to load product details.");
-      } finally {
-        setLoading(false);
+        setError("Failed to load product details");
       }
     };
-    if (itemID) {
-      fetchProduct();
-    }
-  }, [itemID]);
+    fetchProduct();
+  }, [id]);
 
-  if (loading) return <div>Loading product details...</div>;
   if (error) return <div>{error}</div>;
-  if (!productDetails) return <div>Product not found.</div>;
+  if (!productDetails) return <div>Loading product details...</div>;
 
   return (
     <div className="min-h-screen bg-white p-4">
-      {productDetails.type === "sell" ? (
+      {productDetails?.type === "sell" ? (
         <ProductSell productDetails={productDetails} />
       ) : (
         <ProductBid productDetails={productDetails} />

@@ -4,26 +4,16 @@ import AddFunds from "../components/AddFunds";
 import Rating from "../components/Rate";
 import axios from "axios";
 import TestImage from "../assets/cutedog.jpg";
+import { useNavigate } from "react-router-dom";
 
 interface UserData {
   user_id: number;
-  created_at: Date;
   username: string;
   email: string;
-  address: string;
-  password_hash: string;
+  profilePicture: string;
   vip: boolean;
   balance: number;
-  profilePicture?: string; // Optional
-  status: string;
-  role: string;
   average_rating: number;
-  listings: {
-    id: number;
-    title: string;
-    price: number;
-    sold: boolean;
-  }[];
 }
 
 interface UserListings {
@@ -50,64 +40,26 @@ interface UserTransactions {
 }
 
 export default function ProfilePage() {
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
   const [error, setError] = useState<string | null>(null);
 
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-  const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
-
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-
   /* user info, listings, and transactions state */
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [userListings, setUserListings] = useState<UserListings[]>([]);
   const [showListings, setShowListings] = useState(false);
-  const [userTransactions, setUserTransactions] = useState<
-    UserTransactions[] | null
-  >(null);
+  const [userTransactions, setUserTransactions] = useState<UserTransactions[] | null>(null);
   const [showSoldProducts, setShowSoldProducts] = useState(false);
 
   /* rate buyer form state */
   const [showRate, setShowRate] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<UserListings | null>(null);
+  const [transactionRated, setTransactionRated] = useState<boolean>(false);
 
-
-  // Fetch user profile data
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await axios.get("/api/users/profile", {
-          withCredentials: true,
-          validateStatus: (status) => status < 500,
-        });
-
-        console.log("Backend Response Data:", response.data);
-
-        if (response.status === 200 || response.status === 304) {
-          setUserData({
-            user_id: response.data.user_id || 0,
-            username: response.data.username || "Guest",
-            email: response.data.email || "No Email",
-            profilePicture: response.data.profilePicture || TestImage,
-            vip: response.data.vip || false,
-            balance: response.data.balance || 0,
-            average_rating: response.data.average_rating || 0,
-            listings: response.data.listings || [],
-          });
-          console.log("User Data State Set:", userData);
-        } else {
-          setError("Failed to load profile data.");
-          console.error("API Error Response:", response);
-        }
-      } catch (err) {
-        console.error("Error fetching profile data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, []);
+  /* other bs states */
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
 
   // Update profile data after editing
   const handleProfileUpdate = (updatedData: Partial<UserData>) => {
@@ -132,37 +84,6 @@ export default function ProfilePage() {
     }
   };
 
-// <<<<<<< feature/transactions_rating
-
-//   async function fetchUserData(): Promise<void> {
-//     const res = await fetch("http://localhost:3000/api/users/104");
-//     if (!res.ok) {
-//       throw new Error(`No data returned for user. HTTP Status: ${res.status}`);
-//     }
-
-//     const user = await res.json();
-
-//     setUserData(user);
-//   }
-
-//   async function fetchListingData(): Promise<void> {
-//     const res = await fetch("http://localhost:3000/api/listings/104");
-
-//     if (!res.ok) {
-//       throw new Error(
-//         `No listings returned for user. HTTP Status: ${res.status}`,
-//       );
-//     }
-
-//     const listings = await res.json();
-
-//     setUserListings(listings);
-//   }
-
-//   async function fetchTransactionData(): Promise<void> {
-//     const res = await fetch(
-//       "http://localhost:3000/api/transactions/seller/104",
-// =======
   // Handle successful payment
   const handlePaymentSuccess = (amount: number) => {
     setUserData((prevData) =>
@@ -171,8 +92,103 @@ export default function ProfilePage() {
     console.log("Added funds:", amount);
   };
 
-  if (loading) {
-    return <div>Loading profile...</div>;
+
+  async function fetchUserData(): Promise<void> {
+    const res = await axios.get("http://localhost:3000/api/users/profile", {
+      withCredentials: true,
+    });
+
+    if (!res.data) {
+      throw new Error(
+        `No user data returned. HTTP Status: ${res.status}`,
+      );
+    }
+
+    setUserData({
+      user_id: res.data.user_id || 0,
+      username: res.data.username || "Guest",
+      email: res.data.email || "No Email",
+      profilePicture: res.data.profilePicture || TestImage,
+      vip: res.data.vip || false,
+      balance: res.data.balance || 0,
+      average_rating: res.data.average_rating || 0,
+    });
+
+  }
+
+  async function fetchListingData(): Promise<void> {
+    /* wallahi this endpoint is weird asf */
+    const res = await axios.get("http://localhost:3000/api/listings/profile/user", {
+      withCredentials: true
+    });
+
+    if (!res.data) {
+      throw new Error(
+        `No listings returned for user. HTTP Status: ${res.status}`,
+      );
+    }
+    console.log(res.data);
+    setUserListings(res.data);
+  }
+
+  async function fetchTransactionData(): Promise<void> {
+    const res = await axios.get("http://localhost:3000/api/transactions/profile/user", {
+      withCredentials: true
+    })
+
+    if (!res.data) {
+      throw new Error(
+        `No transactions returned for user. HTTP Status: ${res.status}`,
+      );
+    }
+
+    setUserTransactions(res.data);
+  }
+
+  useEffect(() => {
+    const fetchData = async (): Promise<void> => {
+      try {
+        await fetchUserData();
+        await fetchListingData();
+        await fetchTransactionData();
+      } catch (e) {
+        if (e instanceof Error) {
+          console.error(`error: ${e.message}`);
+          setError("You caught us lacking");
+        }
+      }
+    };
+    fetchData();
+  }, []);
+
+  async function handleRemoveListing(discardProduct: UserListings): Promise<void> {
+    try {
+      const updateUserListings = async (): Promise<void> => {
+        console.log(`${discardProduct.item_id}`);
+        const res = await axios.delete(`http://localhost:3000/api/listings/removeProduct/${discardProduct.item_id}`, {
+          withCredentials: true
+        });
+
+        if (!res.data) {
+          throw new Error;
+        }
+
+        console.log(res.data);
+      }
+      console.log("before update listings");
+      await updateUserListings();
+      console.log("after update listings");
+
+    }
+    catch (e) {
+      if (e instanceof Error) {
+        console.error(`Error response: ${e.message}`);
+        setError("You caught us lacking");
+      }
+    }
+
+    console.log("update UI listings");
+    setUserListings(userListings.filter(item => item.item_id != discardProduct.item_id));
   }
 
   if (error) {
@@ -187,37 +203,10 @@ export default function ProfilePage() {
   if (!userData) {
     return (
       <div className="mt-10 text-center">
-        <h1 className="text-2xl font-bold">Access Denied</h1>
-        <p>Please log in to view your profile.</p>
+        <h1 className="text-2xl font-bold">Fetching Your Data...</h1>
       </div>
-
     );
-
-    if (!res.ok) {
-      throw new Error(
-        `No transactions returned for user. HTTP Status: ${res.status}`,
-      );
-    }
-
-    const transactions = await res.json();
-    console.log(transactions);
-    setUserTransactions(transactions);
   }
-
-  useEffect(() => {
-    const fetchData = async (): Promise<void> => {
-      try {
-        await fetchUserData();
-        await fetchListingData();
-        fetchTransactionData();
-      } catch (e) {
-        if (e instanceof Error) {
-          console.error(`error: ${e.message}`);
-        }
-      }
-    };
-    fetchData();
-  }, []);
 
   return (
     <div className="mx-auto max-w-3xl p-4 font-imprima">
@@ -236,9 +225,8 @@ export default function ProfilePage() {
             <h2 className="text-2xl font-bold">{userData?.username}</h2>
             <p className="text-xl text-gray-600">{userData?.email}</p>
             <span
-              className={`mt-2 inline-block rounded-full px-3 py-1 text-white ${
-                userData?.vip ? "bg-[#246fb6]" : "bg-gray-400"
-              }`}
+              className={`mt-2 inline-block rounded-full px-3 py-1 text-white ${userData?.vip ? "bg-[#246fb6]" : "bg-gray-400"
+                }`}
             >
               {userData?.vip ? "VIP Member 🏆" : "Regular User"}
             </span>
@@ -284,17 +272,17 @@ export default function ProfilePage() {
           onClick={() => setShowListings(!showListings)}
           className="w-full px-4 py-2 text-left"
         >
-          <span className="text-2xl font-bold">
+          <span className="text-2xl font-bold flex justify-between">
             {showListings ? "Hide Listings" : "View Listings"}
+            <span className="text-xl">{showListings ? "▲" : "▼"}</span>
           </span>
         </button>
       </div>
 
       <hr className="mb-4" />
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          showListings ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${showListings ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
+          }`}
       >
         {userListings
           .filter((item) => item.status == "active")
@@ -318,7 +306,10 @@ export default function ProfilePage() {
                   <button className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200">
                     View
                   </button>
-                  <button className="rounded-full px-4 py-1 font-semibold text-red-800 transition duration-200 ease-in-out hover:bg-slate-200">
+                  <button
+                    className="rounded-full px-4 py-1 font-semibold text-red-800 transition duration-200 ease-in-out hover:bg-slate-200"
+                    onClick={() => handleRemoveListing(item)}
+                  >
                     Remove
                   </button>
                 </div>
@@ -342,9 +333,8 @@ export default function ProfilePage() {
       <hr className="mb-4" />
 
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          showSoldProducts ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${showSoldProducts ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
+          }`}
       >
         {userListings
           .filter((item) => item.status == "sold")
@@ -353,7 +343,7 @@ export default function ProfilePage() {
               key={item.item_id}
               className="relative mb-4 flex items-center gap-4 rounded-lg p-4 shadow-md"
             >
-              <span className="absolute right-4 top-2 rounded-full px-3 py-1 font-semibold">
+              <span className="absolute right-4 top-2 rounded-full text-red-800 px-3 py-1 font-semibold">
                 SOLD
               </span>
               <img
@@ -369,22 +359,21 @@ export default function ProfilePage() {
                 <hr className="my-2" />
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex gap-2">
-                    <button className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200">
-                      View
+                    <button
+                      className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+                      onClick={() => navigate(`/item/${item.item_id}`)}
+                    >
+                      View Item
                     </button>
-                    <button className="rounded-full px-4 py-1 font-semibold text-red-800 transition duration-200 ease-in-out hover:bg-slate-200">
-                      Remove
+                    <button
+                      className="rounded-full px-4 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+                      onClick={() => {
+                        setShowRate(true);
+                        setSelectedItem(item);
+                      }}>
+                      Rate Transaction
                     </button>
                   </div>
-                  <button
-                    className="rounded-full px-4 py-1 font-semibold transition duration-200 ease-in-out hover:bg-slate-200"
-                    onClick={() => {
-                      setShowRate(true);
-                      setSelectedItem(item);
-                    }}
-                  >
-                    Rate
-                  </button>
                 </div>
               </div>
             </div>
@@ -404,7 +393,6 @@ export default function ProfilePage() {
         />
       )}
 
-      {/* Edit Profile Window
       <EditProfile
         isOpen={isEditProfileOpen}
         onClose={() => setIsEditProfileOpen(false)}
@@ -419,8 +407,6 @@ export default function ProfilePage() {
         }}
       />
 
-      {/* Add Funds Modal */}
-                
       <AddFunds
         isOpen={isAddFundsOpen}
         onClose={() => {
@@ -430,10 +416,10 @@ export default function ProfilePage() {
         clientSecret={clientSecret}
         onPaymentSuccess={handlePaymentSuccess}
         onRequestPayment={handleOpenAddFunds}
-      /> 
+      />
 
-      {/* Logout Button
-      <button
+      {/* Logout Button */}
+      {/* <button
         className="mt-6 rounded-full bg-red-800 px-4 py-2 font-semibold text-white hover:opacity-70"
         onClick={() =>
           logout({ logoutParams: { returnTo: window.location.origin } })

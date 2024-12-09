@@ -19,7 +19,7 @@ function App() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<LandingPage />} />
           <Route path="/listings" element={<Listings />} />
-          <Route path="/item/:itemID" element={<ProductPage />} />
+          <Route path="/item/:id" element={<ProductPage />} />
           <Route path="/cart" element={<CartPage />} />
 
           <Route

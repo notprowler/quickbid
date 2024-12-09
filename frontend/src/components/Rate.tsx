@@ -11,14 +11,6 @@ interface RateProps {
   toggleRateForm: (toggle: boolean) => void;
 }
 
-/* 
-TO DO:
-
-1. Determine user's perspective from authentication and previous page
-
-2. UI problem
-*/
-
 const Rating: React.FC<RateProps> = ({
   sellerID,
   buyerID,
@@ -35,6 +27,25 @@ const Rating: React.FC<RateProps> = ({
   const [seller, setSeller] = useState<string>("");
 
   async function updateRating(): Promise<void> {
+    const res = await fetch(
+      `http://localhost:3000/api/users/rating/${sellerID == undefined ? buyerID : sellerID}`,
+      {
+        method: "PUT",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          rating: rating + 1,
+        }),
+      },
+    );
+
+    if (!res.ok) {
+      throw new Error(`HTTP status: ${res.status}`);
+    }
+  }
+
+  async function ratingSubmitted(): Promise<void> {
     const res = await fetch(
       `http://localhost:3000/api/users/rating/${sellerID == undefined ? buyerID : sellerID}`,
       {
@@ -76,6 +87,7 @@ const Rating: React.FC<RateProps> = ({
     try {
       toggleRateForm(false);
       updateRating();
+      ratingSubmitted();
       complaint != "" && submitComplaint();
     } catch (e) {
       if (e instanceof Error) {
@@ -86,7 +98,7 @@ const Rating: React.FC<RateProps> = ({
 
   useEffect(() => {
     try {
-      const fetchData = async () => {
+      const fetchData = async (): Promise<void> => {
         const res = await fetch(
           `http://localhost:3000/api/users/${sellerID == undefined ? buyerID : sellerID}`,
         );

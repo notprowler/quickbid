@@ -19,7 +19,6 @@ export const useAuth = () => {
         setAuthenticated(false);
       } finally {
         setLoading(false);
-        console.log("Auth Status:", authenticated);
       }
     };
 
