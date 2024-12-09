@@ -4,8 +4,8 @@ const router = express.Router();
 
 router.get("/", listingsController.getListings);
 router.get("/:id", listingsController.getListing);
+router.post('/', listingsController.createListing);
 
-// router.post('/', )
 // router.delete('/:id', )
 // router.patch('/:id', )
 
