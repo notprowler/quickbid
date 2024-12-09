@@ -270,10 +270,7 @@ export type Database = {
           created_at: string
           discount_applied: boolean
           item_id: number
-<<<<<<< HEAD
           rated: boolean | null
-=======
->>>>>>> main
           seller_id: number
           transaction_amount: number
           transaction_id: number
@@ -283,10 +280,7 @@ export type Database = {
           created_at?: string
           discount_applied: boolean
           item_id: number
-<<<<<<< HEAD
           rated?: boolean | null
-=======
->>>>>>> main
           seller_id: number
           transaction_amount: number
           transaction_id?: number
@@ -296,10 +290,7 @@ export type Database = {
           created_at?: string
           discount_applied?: boolean
           item_id?: number
-<<<<<<< HEAD
           rated?: boolean | null
-=======
->>>>>>> main
           seller_id?: number
           transaction_amount?: number
           transaction_id?: number
