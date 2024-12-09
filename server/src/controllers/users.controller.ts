@@ -179,6 +179,14 @@ const updateUserRating: RequestHandler = async (
   req: Request,
   res: Response
 ) => {
+
+  const userId = req.user?.user_id;
+
+  if (!userId) {
+    res.status(400).json({ error: "Invalid User ID" });
+    return;
+  }
+
   const { id } = req.params;
   const { rating } = req.body;
 
@@ -228,6 +236,14 @@ const newUserComplaint: RequestHandler = async (
   req: Request,
   res: Response
 ) => {
+
+  const userId = req.user?.user_id;
+
+  if (!userId) {
+    res.status(400).json({ error: "Invalid User ID" });
+    return;
+  }
+  
   const { id } = req.params;
   const { complaints } = req.body;
 

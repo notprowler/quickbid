@@ -1,9 +1,14 @@
 import express from "express";
-import listingsController from "@/controllers/listings.controller";
+import { getProductInformation, getListings, getProfileListings, removeProduct } from "@/controllers/listings.controller";
+import { validateAccessToken } from "@/util/JWT";
 const router = express.Router();
 
-router.get("/", listingsController.getListings);
-router.get("/:id", listingsController.getListing);
+router.get("/:id", getListings);
+router.get("/product/:id", validateAccessToken, getProductInformation);
+router.delete("/removeProduct/:id", validateAccessToken, removeProduct);
+router.get("/profile/user", validateAccessToken, getProfileListings);
+
+
 
 // router.post('/', )
 // router.delete('/:id', )

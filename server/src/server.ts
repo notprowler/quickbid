@@ -9,7 +9,6 @@ import listingsRoutes from "@/routes/listings";
 import usersRoutes from "@/routes/users";
 import bidRouter from "@/routes/bids";
 import transactionsRouter from "@/routes/transactions";
-import transactionsController from "./controllers/transactions.Controller";
 import registerRoutes from "@/routes/register";
 
 import authRouter from "@/routes/auth";

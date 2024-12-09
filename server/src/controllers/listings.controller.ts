@@ -1,5 +1,5 @@
 import supabase from "@/config/database";
-import type { Request, RequestHandler, Response } from "express";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 
 const getListings: RequestHandler = async (req: Request, res: Response) => {
   const { category, minPrice, maxPrice } = req.query;
@@ -29,9 +29,14 @@ const getListings: RequestHandler = async (req: Request, res: Response) => {
   }
 };
 
-const getListing: RequestHandler = async (req: Request, res: Response) => {
+const getProductInformation: RequestHandler = async (req: Request, res: Response) => {
+  const userId = req.user?.user_id;
 
-  const id = req.params.id; // `req.params` contains route parameters
+  if (!userId) {
+    res.status(400).json({ error: "Invalid User ID" });
+    return;
+  }
+  const { id }  = req.params
 
   if (!id || isNaN(Number(id))) {
     res.status(400).json({ error: "Invalid or missing listing ID" });
@@ -47,6 +52,47 @@ const getListing: RequestHandler = async (req: Request, res: Response) => {
       .eq("item_id", parsedId)
       .single();
 
+    if (error) {
+      res.status(500).json({ error: error.message });
+      return;
+    }
+
+    if (!data) {
+      res.status(404).json({ error: "Listing not found" });
+      return;
+    }
+
+    res.status(200).json(data);
+  } catch (e) {
+    if (e instanceof Error) {
+      res.status(500).json({ error: `${e.message}` });
+    } else if (typeof e === "object" && e !== null && "message" in e) {
+      res.status(500).json({ error: `${e.message}` });
+    }
+  }
+};
+
+const removeProduct: RequestHandler = async (req: Request, res: Response) => {
+  const userId = req.user?.user_id;
+
+  if (!userId) {
+    res.status(400).json({ error: "Invalid User ID" });
+    return;
+  } 
+
+  const { id }  = req.params
+
+  if (!id || isNaN(Number(id))) {
+    res.status(400).json({ error: "Invalid or missing listing ID" });
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("listings")
+      .delete()
+      .eq("item_id", id)
+      .select();
 
     if (error) {
       res.status(500).json({ error: error.message });
@@ -59,8 +105,41 @@ const getListing: RequestHandler = async (req: Request, res: Response) => {
     }
 
     res.status(200).json(data);
-  } catch (err) {
-    res.status(500).json({ error: "An unexpected error occurred" });
+  } catch (e) {
+    if (e instanceof Error) {
+      res.status(500).json({ error: `${e.message}` });
+    } else if (typeof e === "object" && e !== null && "message" in e) {
+      res.status(500).json({ error: `${e.message}` });
+    }
+  }
+
+}
+
+
+const getProfileListings: RequestHandler = async (req: Request, res: Response) => {
+  const userId = req.user?.user_id;
+
+  if (!userId) {
+    res.status(400).json({ error: "Invalid User ID" });
+    return;
+  } 
+
+  try {
+    const { data, error } = await supabase
+      .from("listings")
+      .select("*")
+      .eq("owner_id", userId)
+      .select();
+
+    if (error) {throw error};
+
+    res.status(200).json(data);
+  } catch (e) {
+    if (e instanceof Error) {
+      res.status(500).json({ error: `${e.message}` });
+    } else if (typeof e === "object" && e !== null && "message" in e) {
+      res.status(500).json({ error: `${e.message}` });
+    }
   }
 };
 
@@ -68,8 +147,10 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
   //TODO
 };
 
-export default {
-  getListing,
+export {
+  getProductInformation,
   getListings,
+  getProfileListings,
   createListing,
+  removeProduct
 };
