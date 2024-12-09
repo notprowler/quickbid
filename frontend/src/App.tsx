@@ -11,7 +11,7 @@ import LandingPage from "./pages/LandingPage.tsx"; // Import the LandingPage com
 import Listings from "./pages/Listings.tsx";
 import RegisterPage from "./pages/RegisterPage.tsx";
 import Rating from "./components/Rate.tsx";
-
+import CreateListing from "./pages/createListing.tsx";
 function App() {
   return (
     <Router>
@@ -22,14 +22,12 @@ function App() {
           <Route path="/item/:id" element={<ProductPage />} />
           <Route path="/cart" element={<CartPage />} />
 
-          <Route
-            path="/profile"
-            element={
-              //   <PrivateRoute>
+          <Route path="/create" element={<CreateListing />} />
+          {/* <Route path="/profile" element={
+            <PrivateRoute>
               <ProfilePage />
-              //   </PrivateRoute>
-            }
-          />
+            </PrivateRoute>
+          } /> */}
 
           {/* for page not found */}
           <Route path="*" element={<ErrorPage />} />
