@@ -28,8 +28,8 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 
-const upload = multer({ storage: multer.memoryStorage() });
-app.use(upload.any());
+// const upload = multer({ storage: multer.memoryStorage() });
+// app.use(upload.any());
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello, world!  ");
