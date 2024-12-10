@@ -6,7 +6,7 @@ dotenv.config();
 
 const router = express.Router();
 
-const GOOGLE_API_KEY = "AIzaSyAcQzEip4iC7ErXL8PyzGIt4siqDOnmKHk"; // Replace with your actual API key
+ // Replace with your actual API key
 
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
   throw new Error(
