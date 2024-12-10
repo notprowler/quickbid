@@ -200,8 +200,10 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
     // console.log('Request body:', req.body);
     // console.log('Request files:', req.files);
 
-    const { owner_id, type, title, description, price, category } = req.body;
-    
+    const owner_id = req.user?.user_id
+
+    const { type, title, description, price, category } = req.body;
+
     if (!title || !description || !price || !owner_id || !type || !category) {
       return res.status(400).json({ error: "Missing required fields" });
     }

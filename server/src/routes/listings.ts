@@ -4,7 +4,7 @@ import { validateAccessToken } from "@/util/JWT";
 const router = express.Router();
 
 router.get("/", listingsController.getListings);
-router.post("/", listingsController.createListing);
+router.post("/", validateAccessToken, listingsController.createListing);
 router.get("/:id", listingsController.getListing);
 router.get("/product/:id", validateAccessToken, listingsController.getProductInformation);
 router.delete("/removeProduct/:id", validateAccessToken, listingsController.removeProduct);
