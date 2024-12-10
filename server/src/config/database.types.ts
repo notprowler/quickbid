@@ -113,33 +113,53 @@ export type Database = {
       }
       complaints: {
         Row: {
-          complaint_id: number
+          buyer_id: number
           complaints: string
+          complaints_id: number
           created_at: string
+          seller_id: number
           status: Database["public"]["Enums"]["complaints_status"]
-          user_id: number
+          transaction_id: number
         }
         Insert: {
-          complaint_id?: number
-          complaints: string
+          buyer_id: number
+          complaints?: string
+          complaints_id?: number
           created_at?: string
+          seller_id: number
           status: Database["public"]["Enums"]["complaints_status"]
-          user_id: number
+          transaction_id: number
         }
         Update: {
-          complaint_id?: number
+          buyer_id?: number
           complaints?: string
+          complaints_id?: number
           created_at?: string
+          seller_id?: number
           status?: Database["public"]["Enums"]["complaints_status"]
-          user_id?: number
+          transaction_id?: number
         }
         Relationships: [
           {
-            foreignKeyName: "complaints_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "complaints_buyer_id_fkey"
+            columns: ["buyer_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "complaints_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "complaints_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["transaction_id"]
           },
         ]
       }
@@ -328,6 +348,7 @@ export type Database = {
           email: string
           full_name: string | null
           password_hash: string
+          profile_picture: string[] | null
           role: string
           status: string
           user_id: number
@@ -342,6 +363,7 @@ export type Database = {
           email: string
           full_name?: string | null
           password_hash: string
+          profile_picture?: string[] | null
           role?: string
           status?: string
           user_id?: number
@@ -356,6 +378,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           password_hash?: string
+          profile_picture?: string[] | null
           role?: string
           status?: string
           user_id?: number

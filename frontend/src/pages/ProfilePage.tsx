@@ -37,6 +37,7 @@ interface UserTransactions {
   transaction_amount: number;
   discount_applied: boolean;
   listings: UserListings;
+  rated: boolean
 }
 
 export default function ProfilePage() {
@@ -53,13 +54,14 @@ export default function ProfilePage() {
 
   /* rate buyer form state */
   const [showRate, setShowRate] = useState<boolean>(false);
-  const [selectedItem, setSelectedItem] = useState<UserListings | null>(null);
-  const [transactionRated, setTransactionRated] = useState<boolean>(false);
+  const [selectedItem, setSelectedItem] = useState<UserTransactions | null>(null);
+  const [refreshData, setRefreshData] = useState<number>(0); // State to track refresh
 
   /* other bs states */
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
+
 
   // Update profile data after editing
   const handleProfileUpdate = (updatedData: Partial<UserData>) => {
@@ -159,7 +161,11 @@ export default function ProfilePage() {
       }
     };
     fetchData();
-  }, []);
+  }, [refreshData]);
+
+  const handleRatingCompleted = () => {
+    setRefreshData((prev) => prev + 1); // Increment refreshData to trigger re-render
+  };
 
   async function handleRemoveListing(discardProduct: UserListings): Promise<void> {
     try {
@@ -336,35 +342,35 @@ export default function ProfilePage() {
         className={`overflow-hidden transition-all duration-300 ease-in-out ${showSoldProducts ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
           }`}
       >
-        {userListings
-          .filter((item) => item.status == "sold")
-          .map((item) => (
-            <div
-              key={item.item_id}
-              className="relative mb-4 flex items-center gap-4 rounded-lg p-4 shadow-md"
-            >
-              <span className="absolute right-4 top-2 rounded-full text-red-800 px-3 py-1 font-semibold">
-                SOLD
-              </span>
-              <img
-                src={item.image}
-                alt={item.title}
-                className="h-32 w-32 rounded-lg object-cover"
-              />
-              <div className="flex-1">
-                <h3 className="text-2xl font-bold">{item.title}</h3>
-                <p className="mb-2 text-lg text-gray-700">
-                  Price: ${item.price}
-                </p>
-                <hr className="my-2" />
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex gap-2">
-                    <button
-                      className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
-                      onClick={() => navigate(`/item/${item.item_id}`)}
-                    >
-                      View Item
-                    </button>
+        {userTransactions?.map(item => (
+          <div
+            key={item.item_id}
+            className="relative mb-4 flex items-center gap-4 rounded-lg p-4 shadow-md"
+          >
+            <span className="absolute right-4 top-2 rounded-full text-red-800 px-3 py-1 font-semibold">
+              SOLD
+            </span>
+            <img
+              src={item.listings.image}
+              alt={item.listings.title}
+              className="h-32 w-32 rounded-lg object-cover"
+            />
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold">{item.listings.title}</h3>
+              <p className="mb-2 text-lg text-gray-700">
+                Price: ${item.listings.price}
+              </p>
+              <hr className="my-2" />
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex gap-2">
+                  <button
+                    className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+                    onClick={() => navigate(`/item/${item.item_id}`)}
+                  >
+                    View Item
+                  </button>
+                  {
+                    !item.rated &&
                     <button
                       className="rounded-full px-4 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
                       onClick={() => {
@@ -373,11 +379,12 @@ export default function ProfilePage() {
                       }}>
                       Rate Transaction
                     </button>
-                  </div>
+                  }
                 </div>
               </div>
             </div>
-          ))}
+          </div>
+        ))}
       </div>
       {showRate && selectedItem && userTransactions && (
         <Rating
@@ -388,8 +395,14 @@ export default function ProfilePage() {
               )
               .find((transaction) => transaction.buyer_id)?.buyer_id
           }
-          img={selectedItem.image}
+          transactionID={userTransactions
+            .filter(
+              (transaction) => transaction.item_id == selectedItem.item_id,
+            )
+            .find((transaction) => transaction.buyer_id)?.transaction_id}
+          img={selectedItem.listings.image}
           toggleRateForm={setShowRate}
+          onRatingCompleted={handleRatingCompleted} // Pass callback
         />
       )}
 

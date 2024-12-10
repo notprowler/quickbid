@@ -23,11 +23,11 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
 
           <Route path="/create" element={<CreateListing />} />
-          {/* <Route path="/profile" element={
+          <Route path="/profile" element={
             <PrivateRoute>
               <ProfilePage />
             </PrivateRoute>
-          } /> */}
+          } />
 
           {/* for page not found */}
           <Route path="*" element={<ErrorPage />} />

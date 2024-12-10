@@ -46,7 +46,7 @@ const getTransactionsForCart: RequestHandler = async (
       .from("transactions")
       .select(`*, listings("*")`)
       .order("created_at", { ascending: false })
-      .eq("buyer_id", userId);
+      .eq("buyer_id", 28);
 
     if (error) throw error;
 
@@ -74,9 +74,9 @@ const getTransactionsForProfile: RequestHandler = async (
   try {
     const { data, error } = await supabase
       .from("transactions")
-      .select("*")
+      .select(`*, listings("*")`)
       .order("created_at", { ascending: false })
-      .eq("seller_id", userId);
+      .eq("seller_id", 28);
 
     if (error) throw error;
 
@@ -90,6 +90,7 @@ const getTransactionsForProfile: RequestHandler = async (
   }
 };
 
+/* updating the buyer rating, from user as seller perspective sets rated to true where seller_id is the user */
 const ProfileRatingSubmitted: RequestHandler = async (
   req: Request,
   res: Response
@@ -101,13 +102,14 @@ const ProfileRatingSubmitted: RequestHandler = async (
     return;
   }
 
+  const { transaction_id, rated } = req.body;
+
   try {
     const { data, error } = await supabase
       .from("transactions")
-      .update({
-        rated: true
-      })
-      .eq("seller_id", userId);
+      .update({rated: rated})
+      .eq("seller_id",userId)
+      .eq("transaction_id", transaction_id);
 
     if (error) throw error;
 
@@ -121,6 +123,7 @@ const ProfileRatingSubmitted: RequestHandler = async (
   }
 };
 
+/* updating the seller rating, from user as buyer perspective sets rated to true where buyer_id is the user */
 const CartRatingSubmitted: RequestHandler = async (
   req: Request,
   res: Response
@@ -132,13 +135,14 @@ const CartRatingSubmitted: RequestHandler = async (
     return;
   }
 
+  const { transaction_id, rated } = req.body;
+
   try {
     const { data, error } = await supabase
       .from("transactions")
-      .update({
-        rated: true
-      })
-      .eq("buyer_id", userId);
+      .update({rated : rated})
+      .eq("buyer_id", userId)
+      .eq("transaction_id", transaction_id);
 
     if (error) throw error;
 

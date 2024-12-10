@@ -7,15 +7,19 @@ import { FaRegStar } from "react-icons/fa6";
 interface RateProps {
   sellerID?: number;
   buyerID?: number;
-  img?: string;
+  transactionID?: number;
+  img: string;
   toggleRateForm: (toggle: boolean) => void;
+  onRatingCompleted: () => void;
 }
 
 const Rating: React.FC<RateProps> = ({
   sellerID,
   buyerID,
+  transactionID,
   img,
   toggleRateForm,
+  onRatingCompleted
 }: RateProps) => {
   const [isClicked1, setIsClicked1] = useState<boolean>(false);
   const [isClicked2, setIsClicked2] = useState<boolean>(false);
@@ -26,7 +30,12 @@ const Rating: React.FC<RateProps> = ({
   const [complaint, setComplaint] = useState<string>("");
   const [seller, setSeller] = useState<string>("");
 
+  /* 
+  cart page - provided seller ID to rate seller (user is the buyer)
+  profile page - provided buyer id to rate buyer (user is the seller)
+  */
   async function updateRating(): Promise<void> {
+    console.log('updateRating called: ', buyerID);
     const res = await fetch(
       `http://localhost:3000/api/users/rating/${sellerID == undefined ? buyerID : sellerID}`,
       {
@@ -34,6 +43,7 @@ const Rating: React.FC<RateProps> = ({
         headers: {
           "content-type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           rating: rating + 1,
         }),
@@ -47,14 +57,16 @@ const Rating: React.FC<RateProps> = ({
 
   async function ratingSubmitted(): Promise<void> {
     const res = await fetch(
-      `http://localhost:3000/api/users/rating/${sellerID == undefined ? buyerID : sellerID}`,
+      `http://localhost:3000/api/transactions/${sellerID == undefined ? 'ProfileRateSubmitted' : 'CartRateSubmitted'}`,
       {
         method: "PUT",
         headers: {
           "content-type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
-          rating: rating + 1,
+          transaction_id: transactionID,
+          rated: true
         }),
       },
     );
@@ -66,14 +78,16 @@ const Rating: React.FC<RateProps> = ({
 
   async function submitComplaint(): Promise<void> {
     const res = await fetch(
-      `http://localhost:3000/api/users/complaint/${sellerID == undefined ? buyerID : sellerID}`,
+      `http://localhost:3000/api/users/${sellerID == undefined ? 'profile-complaint' : 'cart-complaint'}/${sellerID == undefined ? buyerID : sellerID}`,
       {
         method: "POST",
         headers: {
           "content-type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           complaints: complaint,
+          transaction_id: transactionID
         }),
       },
     );
@@ -85,10 +99,11 @@ const Rating: React.FC<RateProps> = ({
 
   async function handleSubmit(): Promise<void> {
     try {
-      toggleRateForm(false);
-      updateRating();
-      ratingSubmitted();
+      await updateRating();
+      await ratingSubmitted();
+      onRatingCompleted();
       complaint != "" && submitComplaint();
+      toggleRateForm(false);
     } catch (e) {
       if (e instanceof Error) {
         console.log(`Error: ${e.message}`);
@@ -101,6 +116,7 @@ const Rating: React.FC<RateProps> = ({
       const fetchData = async (): Promise<void> => {
         const res = await fetch(
           `http://localhost:3000/api/users/${sellerID == undefined ? buyerID : sellerID}`,
+          { credentials: "include" }
         );
 
         if (!res.ok) {

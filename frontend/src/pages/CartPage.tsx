@@ -25,6 +25,7 @@ interface UserTransactions {
   transaction_amount: number;
   discount_applied: boolean;
   listings: UserListings;
+  rated: boolean;
 }
 
 interface UserListings {
@@ -81,6 +82,7 @@ const CartPage: React.FC = () => {
   const [showBoughtItems, setShowBoughtItems] = useState<boolean>(false);
   const [showRate, setShowRate] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<UserTransactions>();
+  const [refreshData, setRefreshData] = useState<number>(0); // State to track refresh
 
   const navigate = useNavigate();
 
@@ -135,7 +137,12 @@ const CartPage: React.FC = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [refreshData]);
+
+  const handleRatingCompleted = () => {
+    setRefreshData((prev) => prev + 1);
+  };
+
 
   const handleRemoveItem = (id: number) => {
     setItems((prevItems) => prevItems.filter((item) => item.item_id !== id));
@@ -262,15 +269,18 @@ const CartPage: React.FC = () => {
                 >
                   View Item
                 </button>
-                <button
-                  className="rounded-full px-4 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
-                  onClick={() => {
-                    setShowRate(true);
-                    setSelectedItem(item);
-                  }}
-                >
-                  Rate Purchase
-                </button>
+                {
+                  !item.rated &&
+                  <button
+                    className="rounded-full px-4 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+                    onClick={() => {
+                      setShowRate(true);
+                      setSelectedItem(item);
+                    }}
+                  >
+                    Rate Purchase
+                  </button>
+                }
               </div>
             </div>
           ))}
@@ -279,8 +289,10 @@ const CartPage: React.FC = () => {
       {showRate && selectedItem && (
         <Rating
           sellerID={selectedItem?.listings.owner_id}
+          transactionID={selectedItem?.transaction_id}
           img={selectedItem?.listings.image}
           toggleRateForm={setShowRate}
+          onRatingCompleted={handleRatingCompleted} // Pass callback
         />
       )}
     </div>

@@ -232,7 +232,7 @@ const updateUserRating: RequestHandler = async (
 };
 
 
-const newUserComplaint: RequestHandler = async (
+const ProfileUserComplaint: RequestHandler = async (
   req: Request,
   res: Response
 ) => {
@@ -245,7 +245,7 @@ const newUserComplaint: RequestHandler = async (
   }
   
   const { id } = req.params;
-  const { complaints } = req.body;
+  const { complaints, transaction_id } = req.body;
 
   if (!id) {
     res.status(400).json({ error: "Please provide a User ID" });
@@ -259,8 +259,10 @@ const newUserComplaint: RequestHandler = async (
       .insert([
         {
           complaints,
-          user_id: parseInt(id, 10),
-          status: "pending",
+          transaction_id,
+          buyer_id: parseInt(id, 10),
+          seller_id: userId,
+          status: "pending"
         },
       ])
       .select();
@@ -281,12 +283,67 @@ const newUserComplaint: RequestHandler = async (
   }
 };
 
+
+const CartUserComplaint: RequestHandler = async (
+  req: Request,
+  res: Response
+) => {
+
+  const userId = req.user?.user_id;
+
+  if (!userId) {
+    res.status(400).json({ error: "Invalid User ID" });
+    return;
+  }
+  
+  const { id } = req.params;
+  const { complaints, transaction_id } = req.body;
+
+  if (!id) {
+    res.status(400).json({ error: "Please provide a User ID" });
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+
+      .from("complaints")
+      .insert([
+        {
+          complaints,
+          transaction_id,
+          buyer_id: userId,
+          seller_id: parseInt(id, 10),
+          status: "pending"
+        },
+      ])
+      .select();
+
+    if (error) throw error;
+
+    if (!data) {
+      res.status(500).json({ error: "Error updating row" });
+      return;
+    }
+    res.status(200).send(data);
+  } catch (e) {
+    if (e instanceof Error) {
+      res.status(500).json({ error: `${e.message}` });
+    } else if (typeof e == "object" && e !== null && "message" in e) {
+      res.status(500).json({ error: `${e.message}` });
+    }
+  }
+};
+
+
+
 export {
   getUser,
   updateUser,
   deleteUser,
   updateUserStatus,
   updateUserRating,
-  newUserComplaint,
+  ProfileUserComplaint,
+  CartUserComplaint,
   getUserProfile,
 };
