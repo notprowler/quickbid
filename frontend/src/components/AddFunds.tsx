@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
+import axios from "axios";
 
 interface AddFundsProps {
   isOpen: boolean;
@@ -22,10 +23,9 @@ const AddFunds: React.FC<AddFundsProps> = ({
   const [amount, setAmount] = useState<string>("");
   const [message, setMessage] = useState("");
 
-  // Automatically proceed when clientSecret becomes available
   useEffect(() => {
     if (clientSecret) {
-      processPayment();
+      console.log("ClientSecret is available for processing payment.");
     }
   }, [clientSecret]);
 
@@ -35,21 +35,40 @@ const AddFunds: React.FC<AddFundsProps> = ({
       return;
     }
 
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) {
+      setMessage("Payment method element is not available.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const result = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
-          card: elements.getElement(CardElement)!,
+          card: cardElement,
         },
       });
 
       if (result.error) {
         setMessage(result.error.message || "Payment failed.");
       } else if (result.paymentIntent?.status === "succeeded") {
-        onPaymentSuccess(Number(amount));
-        setMessage("Payment successful!");
-        setTimeout(handleAddFundsClose, 1000);
+        const numericAmount = Number(amount);
+
+        try {
+          await axios.post(
+            "http://localhost:3000/api/payments/update-balance",
+            { amount: numericAmount * 100 }, // Send amount in cents
+            { withCredentials: true },
+          );
+
+          onPaymentSuccess(numericAmount);
+          setMessage("Payment successful!");
+          setTimeout(handleAddFundsClose, 1000);
+        } catch (error) {
+          console.error("Failed to update balance:", error);
+          setMessage("Payment succeeded, but failed to update balance.");
+        }
       }
     } catch (error) {
       console.error("Error during payment:", error);
@@ -68,9 +87,10 @@ const AddFunds: React.FC<AddFundsProps> = ({
     }
 
     if (!clientSecret) {
-      // Request clientSecret dynamically
-      onRequestPayment(numericAmount);
+      await onRequestPayment(numericAmount);
       setMessage("Fetching payment details. Please wait...");
+    } else {
+      await processPayment();
     }
   };
 

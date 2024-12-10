@@ -1,6 +1,4 @@
-import { RequestHandler } from "express";
 import supabase from "@/config/database";
-
 import type { Request, RequestHandler, Response } from "express";
 
 const newTransaction: RequestHandler = async (req: Request, res: Response) => {
@@ -32,14 +30,14 @@ const newTransaction: RequestHandler = async (req: Request, res: Response) => {
   }
 };
 
-const getTransactionsForBuyer: RequestHandler = async (
+const getTransactionsForCart: RequestHandler = async (
   req: Request,
   res: Response
 ) => {
-  const { id } = req.params;
+  const userId = req.user?.user_id;
 
-  if (!id) {
-    res.status(400).json({ error: "Please provide a User ID" });
+  if (!userId) {
+    res.status(400).json({ error: "Unauthorized User" });
     return;
   }
 
@@ -48,7 +46,7 @@ const getTransactionsForBuyer: RequestHandler = async (
       .from("transactions")
       .select(`*, listings("*")`)
       .order("created_at", { ascending: false })
-      .eq("buyer_id", id);
+      .eq("buyer_id", 28);
 
     if (error) throw error;
 
@@ -62,23 +60,89 @@ const getTransactionsForBuyer: RequestHandler = async (
   }
 };
 
-const getTransactionsForSeller: RequestHandler = async (
+const getTransactionsForProfile: RequestHandler = async (
   req: Request,
   res: Response
 ) => {
-  const { id } = req.params;
+  const userId = req.user?.user_id;
 
-  if (!id) {
-    res.status(400).json({ error: "Please provide a User ID" });
+  if (!userId) {
+    res.status(400).json({ error: "Unauthorized User" });
     return;
   }
 
   try {
     const { data, error } = await supabase
       .from("transactions")
-      .select("*")
+      .select(`*, listings("*")`)
       .order("created_at", { ascending: false })
-      .eq("seller_id", id);
+      .eq("seller_id", 28);
+
+    if (error) throw error;
+
+    res.status(200).json(data);
+  } catch (e) {
+    if (e instanceof Error) {
+      res.status(500).json({ error: `${e.message}` });
+    } else if (typeof e === "object" && e !== null && "message" in e) {
+      res.status(500).json({ error: `${e.message}` });
+    }
+  }
+};
+
+/* updating the buyer rating, from user as seller perspective sets rated to true where seller_id is the user */
+const ProfileRatingSubmitted: RequestHandler = async (
+  req: Request,
+  res: Response
+) => {
+  const userId = req.user?.user_id;
+
+  if (!userId) {
+    res.status(400).json({ error: "Unauthorized User" });
+    return;
+  }
+
+  const { transaction_id, rated } = req.body;
+
+  try {
+    const { data, error } = await supabase
+      .from("transactions")
+      .update({rated: rated})
+      .eq("seller_id",userId)
+      .eq("transaction_id", transaction_id);
+
+    if (error) throw error;
+
+    res.status(200).json(data);
+  } catch (e) {
+    if (e instanceof Error) {
+      res.status(500).json({ error: `${e.message}` });
+    } else if (typeof e === "object" && e !== null && "message" in e) {
+      res.status(500).json({ error: `${e.message}` });
+    }
+  }
+};
+
+/* updating the seller rating, from user as buyer perspective sets rated to true where buyer_id is the user */
+const CartRatingSubmitted: RequestHandler = async (
+  req: Request,
+  res: Response
+) => {
+  const userId = req.user?.user_id;
+
+  if (!userId) {
+    res.status(400).json({ error: "Unauthorized User" });
+    return;
+  }
+
+  const { transaction_id, rated } = req.body;
+
+  try {
+    const { data, error } = await supabase
+      .from("transactions")
+      .update({rated : rated})
+      .eq("buyer_id", userId)
+      .eq("transaction_id", transaction_id);
 
     if (error) throw error;
 
@@ -176,9 +240,11 @@ const createTransaction: RequestHandler = async (req, res) => {
   }
 };
 
-export default {
+export {
   newTransaction,
-  getTransactionsForBuyer,
-  getTransactionsForSeller,
+  getTransactionsForCart,
+  getTransactionsForProfile,
   createTransaction,
+  CartRatingSubmitted,
+  ProfileRatingSubmitted
 };

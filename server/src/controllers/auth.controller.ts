@@ -53,43 +53,33 @@ const registerUser = async (
 const loginUser = async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body;
 
-  // Fetch the user from the database
   const { data: user, error } = await supabase
     .from("users")
-    .select("user_id, password_hash, username, email") // Fetch additional fields
+    .select("user_id, password_hash, username, email, role") // Fetch role
     .eq("email", email)
     .single();
 
   if (error || !user) {
-    console.error("User fetch error:", error);
     res.status(400).json({ error: "User doesn't exist" });
     return;
   }
 
-  if (!user.user_id) {
-    console.error("Missing user_id for user:", user);
-    res.status(500).json({ error: "Internal server error: user_id not found" });
-    return;
-  }
-
-  // Compare the provided password with the hashed password
   bcrypt.compare(password, user.password_hash).then((match) => {
     if (!match) {
       res.status(400).json({ error: "Wrong email and password combination!" });
     } else {
-      // Generate the token with the user's ID, username, and email
       const accessToken = generateAccessToken(
         user.user_id,
         user.username,
-        user.email
+        user.email,
+        user.role // Pass role to the token generator
       );
 
-      // Set the cookie with the generated token
       res.cookie("access-token", accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production", // HTTPS only in production
+        secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 30 * 1000, // 30 days
+        maxAge: 60 * 60 * 24 * 30 * 1000,
       });
 
       res.json("LOGGED IN");

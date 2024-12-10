@@ -19,19 +19,23 @@ const CreateListing: React.FC = () => {
         formData.append('type', type);
         formData.append('price', price);
         formData.append('category', category);
-        formData.append('owner_id', ownerId || '104'); // Add a default owner_id for testing
+
+        // formData.append('owner_id', ownerId); // Add a default owner_id for testing
 
         // Append multiple images
         images.forEach((image) => {
             formData.append('images', image);
         });
-        
+
         try {
+            
             const response = await axios.post('http://localhost:3000/api/listings', formData, {
+                withCredentials: true,
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
+
             console.log('Listing created:', response.data);
             
             // Show success message
