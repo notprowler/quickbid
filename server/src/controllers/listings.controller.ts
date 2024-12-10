@@ -188,13 +188,11 @@ const getProfileListings: RequestHandler = async (
 
 //@ts-ignore
 const createListing: RequestHandler = async (req: Request, res: Response) => {
-  const upload = multer({ storage: multer.memoryStorage() }).array("images", 5);
-
+  const upload = multer({ storage: multer.memoryStorage() }).array('images', 5);
+  
   upload(req, res, async (err) => {
     if (err instanceof multer.MulterError) {
-      return res
-        .status(400)
-        .json({ error: "File upload error", details: err.message });
+      return res.status(400).json({ error: 'File upload error', details: err.message });
     } else if (err) {
       return res.status(400).json({ error: err.message });
     }
@@ -203,7 +201,7 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
     // console.log('Request files:', req.files);
 
     const { owner_id, type, title, description, price, category } = req.body;
-
+    
     if (!title || !description || !price || !owner_id || !type || !category) {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -213,27 +211,25 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
     // Handle image uploads to Supabase storage
     if (req.files && Array.isArray(req.files) && req.files.length > 0) {
       const uploadPromises = req.files.map(async (file) => {
-        const fileName = `${owner_id}/${uuidv4()}${path.extname(
-          file.originalname
-        )}`;
+        const fileName = `${owner_id}/${uuidv4()}${path.extname(file.originalname)}`;
 
         // Upload to Supabase storage
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("images")
+          .from('images') 
           .upload(fileName, file.buffer, {
             contentType: file.mimetype,
-            upsert: true,
+            upsert: true
           });
 
         if (uploadError) {
-          console.error("Upload error:", uploadError);
+          console.error('Upload error:', uploadError);
           throw new Error(`Failed to upload image: ${uploadError.message}`);
         }
 
         // Get public URL
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("images").getPublicUrl(fileName);
+        const { data: { publicUrl } } = supabase.storage
+          .from('images')
+          .getPublicUrl(fileName);
 
         return publicUrl;
       });
@@ -242,9 +238,7 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
 
     // Default image if no images uploaded
     if (imageUrls.length === 0) {
-      imageUrls = [
-        "https://community.softr.io/uploads/db9110/original/2X/7/74e6e7e382d0ff5d7773ca9a87e6f6f8817a68a6.jpeg",
-      ];
+      imageUrls = ["https://community.softr.io/uploads/db9110/original/2X/7/74e6e7e382d0ff5d7773ca9a87e6f6f8817a68a6.jpeg"];
     }
 
     const status = "active";
@@ -253,18 +247,7 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
     try {
       const { data, error } = await supabase
         .from("listings")
-        .insert([
-          {
-            title,
-            description,
-            price,
-            owner_id,
-            status,
-            type,
-            category,
-            image: imageUrls,
-          },
-        ])
+        .insert([{ title, description, price, owner_id, status, type, category, image: imageUrls }])
         .select();
 
       if (error) {
@@ -278,7 +261,7 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
   });
 };
 
-export {
+export default {
   getProductInformation,
   getListings,
   getProfileListings,
