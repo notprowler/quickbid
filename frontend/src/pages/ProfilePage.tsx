@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
-import EditProfile from "../components/EditProfile";
 import AddFunds from "../components/AddFunds";
 import Rating from "../components/Rate";
 import axios from "axios";
-import TestImage from "../assets/cutedog.jpg";
+import { FaUser } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 interface UserData {
   user_id: number;
   username: string;
   email: string;
-  profilePicture: string;
   vip: boolean;
   balance: number;
   average_rating: number;
@@ -37,7 +35,7 @@ interface UserTransactions {
   transaction_amount: number;
   discount_applied: boolean;
   listings: UserListings;
-  rated: boolean
+  rated: boolean;
 }
 
 export default function ProfilePage() {
@@ -45,37 +43,28 @@ export default function ProfilePage() {
 
   const [error, setError] = useState<string | null>(null);
 
-  /* user info, listings, and transactions state */
   const [userData, setUserData] = useState<UserData | null>(null);
   const [userListings, setUserListings] = useState<UserListings[]>([]);
   const [showListings, setShowListings] = useState(false);
-  const [userTransactions, setUserTransactions] = useState<UserTransactions[] | null>(null);
+  const [userTransactions, setUserTransactions] = useState<
+    UserTransactions[] | null
+  >(null);
   const [showSoldProducts, setShowSoldProducts] = useState(false);
 
-  /* rate buyer form state */
   const [showRate, setShowRate] = useState<boolean>(false);
-  const [selectedItem, setSelectedItem] = useState<UserTransactions | null>(null);
+  const [selectedItem, setSelectedItem] = useState<UserTransactions | null>(
+    null,
+  );
   const [refreshData, setRefreshData] = useState<number>(0); // State to track refresh
 
-  /* other bs states */
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
 
-
-  // Update profile data after editing
-  const handleProfileUpdate = (updatedData: Partial<UserData>) => {
-    setUserData((prevData) =>
-      prevData ? { ...prevData, ...updatedData } : null,
-    );
-  };
-
-  // Handle Stripe payment intent creation
   const handleOpenAddFunds = async (amount: number) => {
     try {
       const response = await axios.post(
-        "http://localhost:4000/create-payment-intent",
-        { amount: amount * 100 }, // Amount in cents
+        "http://localhost:3000/api/payments/create-payment-intent",
+        { amount: amount * 100 },
         { withCredentials: true },
       );
 
@@ -86,14 +75,11 @@ export default function ProfilePage() {
     }
   };
 
-  // Handle successful payment
   const handlePaymentSuccess = (amount: number) => {
     setUserData((prevData) =>
       prevData ? { ...prevData, balance: prevData.balance + amount } : null,
     );
-    console.log("Added funds:", amount);
   };
-
 
   async function fetchUserData(): Promise<void> {
     const res = await axios.get("http://localhost:3000/api/users/profile", {
@@ -101,42 +87,38 @@ export default function ProfilePage() {
     });
 
     if (!res.data) {
-      throw new Error(
-        `No user data returned. HTTP Status: ${res.status}`,
-      );
+      throw new Error(`No user data returned. HTTP Status: ${res.status}`);
     }
 
     setUserData({
       user_id: res.data.user_id || 0,
       username: res.data.username || "Guest",
       email: res.data.email || "No Email",
-      profilePicture: res.data.profilePicture || TestImage,
       vip: res.data.vip || false,
       balance: res.data.balance || 0,
       average_rating: res.data.average_rating || 0,
     });
-
   }
 
   async function fetchListingData(): Promise<void> {
-    /* wallahi this endpoint is weird asf */
-    const res = await axios.get("http://localhost:3000/api/listings/profile/user", {
-      withCredentials: true
-    });
+    const res = await axios.get(
+      "http://localhost:3000/api/listings/profile/user",
+      { withCredentials: true },
+    );
 
     if (!res.data) {
       throw new Error(
         `No listings returned for user. HTTP Status: ${res.status}`,
       );
     }
-    console.log(res.data);
     setUserListings(res.data);
   }
 
   async function fetchTransactionData(): Promise<void> {
-    const res = await axios.get("http://localhost:3000/api/transactions/profile/user", {
-      withCredentials: true
-    })
+    const res = await axios.get(
+      "http://localhost:3000/api/transactions/profile/user",
+      { withCredentials: true },
+    );
 
     if (!res.data) {
       throw new Error(
@@ -155,7 +137,6 @@ export default function ProfilePage() {
         await fetchTransactionData();
       } catch (e) {
         if (e instanceof Error) {
-          console.error(`error: ${e.message}`);
           setError("You caught us lacking");
         }
       }
@@ -167,34 +148,22 @@ export default function ProfilePage() {
     setRefreshData((prev) => prev + 1); // Increment refreshData to trigger re-render
   };
 
-  async function handleRemoveListing(discardProduct: UserListings): Promise<void> {
+  async function handleRemoveListing(
+    discardProduct: UserListings,
+  ): Promise<void> {
     try {
-      const updateUserListings = async (): Promise<void> => {
-        console.log(`${discardProduct.item_id}`);
-        const res = await axios.delete(`http://localhost:3000/api/listings/removeProduct/${discardProduct.item_id}`, {
-          withCredentials: true
-        });
-
-        if (!res.data) {
-          throw new Error;
-        }
-
-        console.log(res.data);
-      }
-      console.log("before update listings");
-      await updateUserListings();
-      console.log("after update listings");
-
-    }
-    catch (e) {
+      await axios.delete(
+        `http://localhost:3000/api/listings/removeProduct/${discardProduct.item_id}`,
+        { withCredentials: true },
+      );
+      setUserListings(
+        userListings.filter((item) => item.item_id !== discardProduct.item_id),
+      );
+    } catch (e) {
       if (e instanceof Error) {
-        console.error(`Error response: ${e.message}`);
         setError("You caught us lacking");
       }
     }
-
-    console.log("update UI listings");
-    setUserListings(userListings.filter(item => item.item_id != discardProduct.item_id));
   }
 
   if (error) {
@@ -216,25 +185,23 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-3xl p-4 font-imprima">
-      <h1 className="mb-4 text-3xl font-bold">Welcome, {userData?.username}</h1>
+      <h1 className="mb-4 text-3xl font-bold">Welcome, {userData.username}</h1>
 
       {/* User Information Card */}
       <div className="mb-6 flex items-center gap-4 rounded-lg px-8 py-4 shadow-md">
-        <img
-          src={userData.profilePicture || TestImage}
-          alt="User Avatar"
-          className="h-36 w-36 rounded-full object-cover"
-        />
+        <div className="flex h-36 w-36 items-center justify-center rounded-full bg-gray-200">
+          <FaUser className="text-6xl text-gray-500" />
+        </div>
         <div>
-
           <div className="px-4">
-            <h2 className="text-2xl font-bold">{userData?.username}</h2>
-            <p className="text-xl text-gray-600">{userData?.email}</p>
+            <h2 className="text-2xl font-bold">{userData.username}</h2>
+            <p className="text-xl text-gray-600">{userData.email}</p>
             <span
-              className={`mt-2 inline-block rounded-full px-3 py-1 text-white ${userData?.vip ? "bg-[#246fb6]" : "bg-gray-400"
-                }`}
+              className={`mt-2 inline-block rounded-full px-3 py-1 text-white ${
+                userData.vip ? "bg-[#246fb6]" : "bg-gray-400"
+              }`}
             >
-              {userData?.vip ? "VIP Member 🏆" : "Regular User"}
+              {userData.vip ? "VIP Member 🏆" : "Regular User"}
             </span>
           </div>
           <div className="mt-4 flex gap-12 px-4">
@@ -246,24 +213,14 @@ export default function ProfilePage() {
             </div>
             <div>
               <p className="text-sm font-semibold">Rating</p>
-              <p className="text-xl font-bold">{userData?.average_rating}</p>
+              <p className="text-xl font-bold">
+                {userData.average_rating.toFixed(2)}
+              </p>
             </div>
-            {/* <div>
-              <p className="text-sm font-semibold">Reviews</p>
-              <p className="text-xl font-bold">{userData.ratings.count}</p>
-            </div> */}
           </div>
-
           <div className="space-x-20">
             <button
-              onClick={() => setIsEditProfileOpen(true)}
-              className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition hover:bg-slate-200"
-            >
-              Edit Profile
-            </button>
-
-            <button
-              onClick={() => handleOpenAddFunds(50)} // Example amount
+              onClick={() => handleOpenAddFunds(50)}
               className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition hover:bg-slate-200"
             >
               Add Funds
@@ -272,13 +229,12 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Listings */}
       <div className="mb-2">
         <button
           onClick={() => setShowListings(!showListings)}
           className="w-full px-4 py-2 text-left"
         >
-          <span className="text-2xl font-bold flex justify-between">
+          <span className="flex justify-between text-2xl font-bold">
             {showListings ? "Hide Listings" : "View Listings"}
             <span className="text-xl">{showListings ? "▲" : "▼"}</span>
           </span>
@@ -287,11 +243,12 @@ export default function ProfilePage() {
 
       <hr className="mb-4" />
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${showListings ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
-          }`}
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          showListings ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
+        }`}
       >
         {userListings
-          .filter((item) => item.status == "active")
+          .filter((item) => item.status === "active")
           .map((item) => (
             <div
               key={item.item_id}
@@ -307,9 +264,11 @@ export default function ProfilePage() {
                 <p className="mb-2 text-lg text-gray-700">
                   Price: ${item.price}
                 </p>
-                <hr className="my-2" />
                 <div className="flex gap-2">
-                  <button className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200">
+                  <button
+                    className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+                    onClick={() => navigate(`/item/${item.item_id}`)}
+                  >
                     View
                   </button>
                   <button
@@ -324,7 +283,6 @@ export default function ProfilePage() {
           ))}
       </div>
 
-      {/* Sold Items Section */}
       <div className="mb-2 flex items-center justify-between">
         <button
           onClick={() => {
@@ -339,15 +297,16 @@ export default function ProfilePage() {
       <hr className="mb-4" />
 
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${showSoldProducts ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
-          }`}
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          showSoldProducts ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
+        }`}
       >
-        {userTransactions?.map(item => (
+        {userTransactions?.map((item) => (
           <div
             key={item.item_id}
             className="relative mb-4 flex items-center gap-4 rounded-lg p-4 shadow-md"
           >
-            <span className="absolute right-4 top-2 rounded-full text-red-800 px-3 py-1 font-semibold">
+            <span className="absolute right-4 top-2 rounded-full px-3 py-1 font-semibold text-red-800">
               SOLD
             </span>
             <img
@@ -369,17 +328,17 @@ export default function ProfilePage() {
                   >
                     View Item
                   </button>
-                  {
-                    !item.rated &&
+                  {!item.rated && (
                     <button
                       className="rounded-full px-4 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
                       onClick={() => {
                         setShowRate(true);
                         setSelectedItem(item);
-                      }}>
+                      }}
+                    >
                       Rate Transaction
                     </button>
-                  }
+                  )}
                 </div>
               </div>
             </div>
@@ -391,55 +350,33 @@ export default function ProfilePage() {
           buyerID={
             userTransactions
               .filter(
-                (transaction) => transaction.item_id == selectedItem.item_id,
+                (transaction) => transaction.item_id === selectedItem.item_id,
               )
               .find((transaction) => transaction.buyer_id)?.buyer_id
           }
-          transactionID={userTransactions
-            .filter(
-              (transaction) => transaction.item_id == selectedItem.item_id,
-            )
-            .find((transaction) => transaction.buyer_id)?.transaction_id}
+          transactionID={
+            userTransactions
+              .filter(
+                (transaction) => transaction.item_id == selectedItem.item_id,
+              )
+              .find((transaction) => transaction.buyer_id)?.transaction_id
+          }
           img={selectedItem.listings.image}
           toggleRateForm={setShowRate}
           onRatingCompleted={handleRatingCompleted} // Pass callback
         />
       )}
 
-      <EditProfile
-        isOpen={isEditProfileOpen}
-        onClose={() => setIsEditProfileOpen(false)}
-        userData={{
-          name: userData.username,
-          email: userData.email,
-          username: userData.username,
-          profilePicture: userData.profilePicture || "",
-        }}
-        onUpdate={(updatedData) => {
-          setUserData((prev) => (prev ? { ...prev, ...updatedData } : prev));
-        }}
-      />
-
       <AddFunds
         isOpen={isAddFundsOpen}
         onClose={() => {
           setIsAddFundsOpen(false);
-          setClientSecret(null); // Reset clientSecret for next transaction
+          setClientSecret(null);
         }}
         clientSecret={clientSecret}
         onPaymentSuccess={handlePaymentSuccess}
         onRequestPayment={handleOpenAddFunds}
       />
-
-      {/* Logout Button */}
-      {/* <button
-        className="mt-6 rounded-full bg-red-800 px-4 py-2 font-semibold text-white hover:opacity-70"
-        onClick={() =>
-          logout({ logoutParams: { returnTo: window.location.origin } })
-        }
-      >
-        Log Out
-      </button> */}
     </div>
   );
 }

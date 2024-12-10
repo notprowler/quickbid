@@ -14,10 +14,11 @@ if (!process.env.TOKEN_SECRET)
 const generateAccessToken = (
   userId: number,
   username: string,
-  email: string
+  email: string,
+  role: string
 ) => {
   return jwt.sign(
-    { user_id: userId, username, email }, // Include all required fields
+    { user_id: userId, username, email, role },
     process.env.TOKEN_SECRET as string,
     { expiresIn: "36h" }
   );
