@@ -160,15 +160,16 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ error: err.message });
     }
 
-    // console.log('Request body:', req.body);
-    // console.log('Request files:', req.files);
-
     const owner_id = req.user?.user_id;
 
-    const { type, title, description, price, category } = req.body;
+    const { type, title, description, price, category, deadline } = req.body;
 
     if (!title || !description || !price || !owner_id || !type || !category) {
       return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    if (type === 'auction' && !deadline) {
+      return res.status(400).json({ error: "Please provide a deadline for auction listings" });
     }
 
     let imageUrls: string[] = [];
@@ -225,6 +226,7 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
             status,
             type,
             category,
+            deadline: type === 'auction' ? deadline : null,
             image: imageUrls,
           },
         ])
