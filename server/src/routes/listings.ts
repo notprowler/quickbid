@@ -5,7 +5,6 @@ const router = express.Router();
 
 router.get("/", listingsController.getListings);
 router.post("/", validateAccessToken, listingsController.createListing);
-router.get("/:id", listingsController.getListing);
 router.get("/product/:id", listingsController.getProductInformation);
 router.delete(
   "/removeProduct/:id",
