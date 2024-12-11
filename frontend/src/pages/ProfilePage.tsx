@@ -51,6 +51,10 @@ export default function ProfilePage() {
   >(null);
   const [showSoldProducts, setShowSoldProducts] = useState(false);
 
+  const [buyerTransactions, setBuyerTransactions] = useState<
+    UserTransactions[] | null
+  >(null);
+
   const [showRate, setShowRate] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<UserTransactions | null>(
     null,
@@ -82,65 +86,146 @@ export default function ProfilePage() {
   };
 
   async function fetchUserData(): Promise<void> {
-    const res = await axios.get("http://localhost:3000/api/users/profile", {
-      withCredentials: true,
-    });
+    try {
+      console.log("Fetching user data...");
+      const res = await axios.get("http://localhost:3000/api/users/profile", {
+        withCredentials: true,
+      });
 
-    if (!res.data) {
-      throw new Error(`No user data returned. HTTP Status: ${res.status}`);
+      if (!res.data) {
+        throw new Error(`No user data returned. HTTP Status: ${res.status}`);
+      }
+
+      setUserData({
+        user_id: res.data.user_id || 0,
+        username: res.data.username || "Guest",
+        email: res.data.email || "No Email",
+        vip: res.data.vip || false,
+        balance: res.data.balance || 0,
+        average_rating: res.data.average_rating || 0,
+      });
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      throw error;
     }
-
-    setUserData({
-      user_id: res.data.user_id || 0,
-      username: res.data.username || "Guest",
-      email: res.data.email || "No Email",
-      vip: res.data.vip || false,
-      balance: res.data.balance || 0,
-      average_rating: res.data.average_rating || 0,
-    });
   }
 
   async function fetchListingData(): Promise<void> {
-    const res = await axios.get(
-      "http://localhost:3000/api/listings/profile/user",
-      { withCredentials: true },
-    );
-
-    if (!res.data) {
-      throw new Error(
-        `No listings returned for user. HTTP Status: ${res.status}`,
+    try {
+      const res = await axios.get(
+        "http://localhost:3000/api/listings/profile/user",
+        { withCredentials: true },
       );
+
+      if (!res.data) {
+        throw new Error(
+          `No listings returned for user. HTTP Status: ${res.status}`,
+        );
+      }
+      setUserListings(res.data);
+    } catch (error) {
+      console.error("Error fetching listings data:", error);
+      setError("Failed to fetch listings data");
     }
-    setUserListings(res.data);
   }
 
   async function fetchTransactionData(): Promise<void> {
-    const res = await axios.get(
-      "http://localhost:3000/api/transactions/profile/user",
-      { withCredentials: true },
-    );
-
-    if (!res.data) {
-      throw new Error(
-        `No transactions returned for user. HTTP Status: ${res.status}`,
+    try {
+      const res = await axios.get(
+        "http://localhost:3000/api/transactions/profile/user",
+        { withCredentials: true },
       );
-    }
 
-    setUserTransactions(res.data);
+      if (!res.data) {
+        throw new Error(
+          `No transactions returned for user. HTTP Status: ${res.status}`,
+        );
+      }
+
+      setUserTransactions(res.data);
+    } catch (error) {
+      console.error("Error fetching transaction data:", error);
+      setError("Failed to fetch transaction data");
+    }
+  }
+
+  async function fetchBuyerTransactions(): Promise<void> {
+    try {
+      console.log("Fetching buyer transactions...");
+      const res = await axios.get(
+        "http://localhost:3000/api/transactions/buyer/user",
+        { withCredentials: true },
+      );
+
+      if (!res.data) {
+        throw new Error(`No transactions returned. HTTP Status: ${res.status}`);
+      }
+
+      setBuyerTransactions(res.data);
+      console.log("Buyer transactions fetched successfully");
+    } catch (error) {
+      console.error("Error fetching buyer transactions:", error);
+      throw error;
+    }
+  }
+
+  async function handleApproveListing(itemId: number): Promise<void> {
+    try {
+      const response = await axios.put(
+        `http://localhost:3000/api/listings/${itemId}/approve`,
+        {},
+        { withCredentials: true },
+      );
+
+      if (response.status === 200) {
+        alert("Listing approved successfully!");
+        setRefreshData((prev) => prev + 1);
+      } else {
+        throw new Error(`Approval failed with status ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error approving listing:", error);
+      alert("Failed to approve listing.");
+    }
+  }
+
+  async function handleRejectListing(itemId: number): Promise<void> {
+    try {
+      const response = await axios.put(
+        `http://localhost:3000/api/listings/${itemId}/reject`,
+        {},
+        { withCredentials: true },
+      );
+
+      if (response.status === 200) {
+        alert("Listing rejected successfully!");
+        setRefreshData((prev) => prev + 1);
+      } else {
+        throw new Error(`Rejection failed with status ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error rejecting listing:", error);
+      alert("Failed to reject listing.");
+    }
   }
 
   useEffect(() => {
     const fetchData = async (): Promise<void> => {
       try {
+        console.log("Starting data fetch...");
         await fetchUserData();
+        console.log("User data fetched successfully");
         await fetchListingData();
+        console.log("Listing data fetched successfully");
         await fetchTransactionData();
+        console.log("Transaction data fetched successfully");
+        await fetchBuyerTransactions();
+        console.log("Buyer transactions fetched successfully");
       } catch (e) {
-        if (e instanceof Error) {
-          setError("You caught us lacking");
-        }
+        setError("You caught us lacking");
       }
     };
+
     fetchData();
   }, [refreshData]);
 
@@ -153,7 +238,7 @@ export default function ProfilePage() {
   ): Promise<void> {
     try {
       await axios.delete(
-        `http://localhost:3000/api/listings/removeProduct/${discardProduct.item_id}`,
+        "http://localhost:3000/api/listings/removeProduct/${discardProduct.item_id}",
         { withCredentials: true },
       );
       setUserListings(
@@ -248,12 +333,23 @@ export default function ProfilePage() {
         }`}
       >
         {userListings
-          .filter((item) => item.status === "active")
+          .filter(
+            (item) => item.status === "active" || item.status === "pending",
+          )
           .map((item) => (
             <div
               key={item.item_id}
               className="relative mb-4 flex items-center gap-4 rounded-lg p-4 shadow-md"
             >
+              <span
+                className={`absolute right-4 top-2 rounded-full px-3 py-1 font-semibold ${
+                  item.status === "active"
+                    ? "bg-blue-500 text-white"
+                    : "bg-yellow-500 text-black"
+                }`}
+              >
+                {item.status.toUpperCase()}
+              </span>
               <img
                 src={item.image}
                 alt={item.title}
@@ -264,6 +360,7 @@ export default function ProfilePage() {
                 <p className="mb-2 text-lg text-gray-700">
                   Price: ${item.price}
                 </p>
+
                 <div className="flex gap-2">
                   <button
                     className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
@@ -277,6 +374,22 @@ export default function ProfilePage() {
                   >
                     Remove
                   </button>
+                  {item.status === "pending" && (
+                    <div className="flex">
+                      <button
+                        className="rounded-full px-6 py-1 font-semibold text-green-800 transition duration-200 ease-in-out hover:bg-slate-200"
+                        onClick={() => handleApproveListing(item.item_id)}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        className="rounded-full px-6 py-1 font-semibold text-red-800 transition duration-200 ease-in-out hover:bg-slate-200"
+                        onClick={() => handleRejectListing(item.item_id)}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -301,50 +414,59 @@ export default function ProfilePage() {
           showSoldProducts ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        {userTransactions?.map((item) => (
-          <div
-            key={item.item_id}
-            className="relative mb-4 flex items-center gap-4 rounded-lg p-4 shadow-md"
-          >
-            <span className="absolute right-4 top-2 rounded-full px-3 py-1 font-semibold text-red-800">
-              SOLD
-            </span>
-            <img
-              src={item.listings.image}
-              alt={item.listings.title}
-              className="h-32 w-32 rounded-lg object-cover"
-            />
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold">{item.listings.title}</h3>
-              <p className="mb-2 text-lg text-gray-700">
-                Price: ${item.listings.price}
-              </p>
-              <hr className="my-2" />
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex gap-2">
-                  <button
-                    className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
-                    onClick={() => navigate(`/item/${item.item_id}`)}
-                  >
-                    View Item
-                  </button>
-                  {!item.rated && (
+        {userTransactions
+          ?.filter((tx) => ["sold"].includes(tx.listings?.status))
+          .map((tx) => (
+            <div
+              key={tx.transaction_id}
+              className="relative mb-4 flex items-center gap-4 rounded-lg p-4 shadow-md"
+            >
+              <span
+                className={`absolute right-4 top-2 rounded-full px-3 py-1 font-semibold ${
+                  tx.listings.status === "sold"
+                    ? "bg-red-500 text-white"
+                    : "bg-yellow-500 text-black"
+                }`}
+              >
+                {tx.listings.status.toUpperCase()}
+              </span>
+              <img
+                src={tx.listings.image}
+                alt={tx.listings.title}
+                className="h-32 w-32 rounded-lg object-cover"
+              />
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold">{tx.listings.title}</h3>
+                <p className="mb-2 text-lg text-gray-700">
+                  Price: ${tx.listings.price}
+                </p>
+                <hr className="my-2" />
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex gap-2">
                     <button
-                      className="rounded-full px-4 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
-                      onClick={() => {
-                        setShowRate(true);
-                        setSelectedItem(item);
-                      }}
+                      className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+                      onClick={() => navigate(`/item/${tx.item_id}`)}
                     >
-                      Rate Transaction
+                      View Item
                     </button>
-                  )}
+                    {!tx.rated && (
+                      <button
+                        className="rounded-full px-4 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+                        onClick={() => {
+                          setShowRate(true);
+                          setSelectedItem(tx);
+                        }}
+                      >
+                        Rate Transaction
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
       </div>
+
       {showRate && selectedItem && userTransactions && (
         <Rating
           buyerID={

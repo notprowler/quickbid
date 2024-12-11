@@ -17,6 +17,17 @@ router.get(
   listingsController.getProfileListings
 );
 
+router.put(
+  "/:id/approve",
+  validateAccessToken,
+  listingsController.approveListing
+);
+router.put(
+  "/:id/reject",
+  validateAccessToken,
+  listingsController.rejectListing
+);
+
 // router.delete('/:id', )
 // router.patch('/:id', )
 
