@@ -114,7 +114,7 @@ const bidRejected: RequestHandler = async (req: Request, res: Response) => {
 // 4. ??
 const placeBid: RequestHandler = async (req: Request, res: Response) => {
     const { itemID } = req.params;
-    const { bidValue} = req.body;
+    const { bidValue } = req.body;
 
     // TODO come back and change this value
     const bidderID = req.user?.user_id || 104;

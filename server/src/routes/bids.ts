@@ -7,4 +7,5 @@ router.get('/:itemID', bidsController.retrieveAllBids);
 router.put('/accept/:itemID', bidsController.bidAccepted);
 router.put('/reject/:itemID', bidsController.bidRejected);
 router.post('/place', validateAccessToken,bidsController.placeBid);
+router.post('/place/:itemID', validateAccessToken, bidsController.placeBid);
 export default router
