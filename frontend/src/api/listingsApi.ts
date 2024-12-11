@@ -11,13 +11,3 @@ export const getListings = async (queryString: string = "") => {
     throw error;
   }
 };
-
-export const getListing = async (id: string) => {
-  try {
-    const response = await axios.get(`${BASE_URL}/listings/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching listing:", error);
-    throw error;
-  }
-};

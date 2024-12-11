@@ -107,8 +107,8 @@ const ProfileRatingSubmitted: RequestHandler = async (
   try {
     const { data, error } = await supabase
       .from("transactions")
-      .update({rated: rated})
-      .eq("seller_id",userId)
+      .update({ rated: rated })
+      .eq("seller_id", userId)
       .eq("transaction_id", transaction_id);
 
     if (error) throw error;
@@ -140,7 +140,7 @@ const CartRatingSubmitted: RequestHandler = async (
   try {
     const { data, error } = await supabase
       .from("transactions")
-      .update({rated : rated})
+      .update({ rated: rated })
       .eq("buyer_id", userId)
       .eq("transaction_id", transaction_id);
 
@@ -157,7 +157,8 @@ const CartRatingSubmitted: RequestHandler = async (
 };
 
 const createTransaction: RequestHandler = async (req, res) => {
-  const { buyer_id, seller_id, item_id, transaction_amount, is_vip } = req.body;
+  const buyer_id = req.user?.user_id; // Get buyer ID from the authenticated user's session
+  const { seller_id, item_id, transaction_amount } = req.body;
 
   if (!buyer_id || !seller_id || !item_id || !transaction_amount) {
     res.status(400).json({ error: "All fields are required." });
@@ -165,6 +166,7 @@ const createTransaction: RequestHandler = async (req, res) => {
   }
 
   try {
+    console.log("Fetching buyer data...");
     const { data: buyerData, error: buyerError } = await supabase
       .from("users")
       .select("balance, vip")
@@ -172,12 +174,17 @@ const createTransaction: RequestHandler = async (req, res) => {
       .single();
 
     if (buyerError || !buyerData) {
+      console.error(
+        "Error fetching buyer:",
+        buyerError?.message || "Not found"
+      );
       res.status(404).json({ error: "Buyer not found." });
       return;
     }
 
-    const { balance: buyerBalance, vip } = buyerData;
+    const { balance: buyerBalance, vip: is_vip } = buyerData;
 
+    console.log("Fetching seller data...");
     const { data: sellerData, error: sellerError } = await supabase
       .from("users")
       .select("balance")
@@ -185,40 +192,68 @@ const createTransaction: RequestHandler = async (req, res) => {
       .single();
 
     if (sellerError || !sellerData) {
+      console.error(
+        "Error fetching seller:",
+        sellerError?.message || "Not found"
+      );
       res.status(404).json({ error: "Seller not found." });
       return;
     }
 
     const { balance: sellerBalance } = sellerData;
 
-    const discountApplied = is_vip && vip;
+    // Apply VIP discount if applicable
+    const discountApplied = is_vip; // VIP status from backend check
     const finalAmount = discountApplied
-      ? transaction_amount * 0.85
+      ? transaction_amount * 0.85 // Apply 15% discount
       : transaction_amount;
 
     if (buyerBalance < finalAmount) {
+      console.error("Buyer has insufficient balance.");
       res.status(400).json({ error: "Insufficient balance." });
       return;
     }
 
+    console.log("Updating buyer's balance...");
     const { error: buyerUpdateError } = await supabase
       .from("users")
       .update({ balance: buyerBalance - finalAmount })
       .eq("user_id", buyer_id);
 
     if (buyerUpdateError) {
+      console.error(
+        "Error during buyer balance update:",
+        buyerUpdateError.message
+      );
       throw new Error("Failed to update buyer's balance.");
     }
 
+    console.log("Updating seller's balance...");
     const { error: sellerUpdateError } = await supabase
       .from("users")
       .update({ balance: sellerBalance + finalAmount })
       .eq("user_id", seller_id);
 
     if (sellerUpdateError) {
+      console.error(
+        "Error during seller balance update:",
+        sellerUpdateError.message
+      );
       throw new Error("Failed to update seller's balance.");
     }
 
+    console.log("Marking item as sold...");
+    const { error: markSoldError } = await supabase
+      .from("listings")
+      .update({ status: "sold" })
+      .eq("item_id", item_id);
+
+    if (markSoldError) {
+      console.error("Error marking item as sold:", markSoldError.message);
+      throw new Error("Failed to mark item as sold.");
+    }
+
+    console.log("Logging transaction...");
     const { error: transactionError } = await supabase
       .from("transactions")
       .insert({
@@ -230,13 +265,16 @@ const createTransaction: RequestHandler = async (req, res) => {
       });
 
     if (transactionError) {
+      console.error("Error logging transaction:", transactionError.message);
       throw new Error("Failed to log transaction.");
     }
 
     res.status(201).json({ message: "Transaction successful." });
   } catch (error) {
     console.error("Error processing transaction:", error);
-    res.status(500).json({ error: "Failed to process transaction." });
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Failed to process transaction." });
+    }
   }
 };
 
@@ -246,5 +284,5 @@ export {
   getTransactionsForProfile,
   createTransaction,
   CartRatingSubmitted,
-  ProfileRatingSubmitted
+  ProfileRatingSubmitted,
 };
