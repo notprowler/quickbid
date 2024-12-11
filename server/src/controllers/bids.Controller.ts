@@ -168,39 +168,37 @@ const placeBid: RequestHandler = async (req: Request, res: Response) => {
             return;
         }
 // ------------------------------------------------------------------------------------------------
-        //PRE:
-        // Give back users money to his account.
-        const { data: previousBidData, error: previousBidError } = await supabase
-            .from('bids')
-            .select('bidder_id, bid_amount')
-            .eq('item_id', itemID)
-            .eq('bid_status', 'pending')
-            .single();
+    //PRE:
+    // Give back users money to his account.
+    const { data: previousBidData, error: previousBidError } = await supabase
+        .from('bids')
+        .select('bidder_id, bid_amount')
+        .eq('item_id', itemID)
+        .eq('bid_status', 'pending')
+        .single();
 
-        if (previousBidError) throw previousBidError;
+    if (previousBidError) throw previousBidError;
 
-        if (previousBidData) {
-            const { bidder_id: oldBidder, bid_amount: oldAmount } = previousBidData;
+    if (previousBidData && previousBidData.bidder_id) {
+        const { bidder_id: oldBidder, bid_amount: oldAmount } = previousBidData;
 
-            const { data: refundData, error: refundError } = await supabase
-            .from('users')
-            .select('balance')
-            .eq('user_id', oldBidder)
-            .single();
+        const { data: refundData, error: refundError } = await supabase
+        .from('users')
+        .select('balance')
+        .eq('user_id', oldBidder)
+        .single();
 
-            if (refundError) throw refundError;
+        if (refundError) throw refundError;
 
-            const newBalance = refundData.balance + oldAmount;
+        const newBalance = refundData.balance + oldAmount;
 
-            const { error: updateError } = await supabase
-            .from('users')
-            .update({ balance: newBalance })
-            .eq('user_id', oldBidder);
+        const { error: updateError } = await supabase
+        .from('users')
+        .update({ balance: newBalance })
+        .eq('user_id', oldBidder);
 
-            if (updateError) throw updateError;
-
-            if (refundError) throw refundError;
-        }
+        if (updateError) throw updateError;
+    }
 // ------------------------------------------------------------------------------------------------
         //1. Deduct money from users wallet
         const { error: walletError } = await supabase
