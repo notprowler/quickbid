@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
 // -------------------- Product Interface --------------------
@@ -13,6 +13,7 @@ interface Product {
   status: string;
   created_at: string;
   type: "sell" | "bid";
+  owner_id: number;
 }
 
 // -------------------- Review Interface --------------------
@@ -54,14 +55,40 @@ const reviews: Review[] = [
 ];
 
 // -------------------- ProductSell Component --------------------
-export function ProductSell({ productDetails }: { productDetails: Product | undefined }) {
+export function ProductSell({
+  productDetails,
+}: {
+  productDetails: Product | undefined;
+}) {
+  const navigate = useNavigate();
 
-  const handlePurchase = () => {
-    alert(
-      `You have purchased ${productDetails?.title} for $${productDetails?.price}!`,
-    );
+  const handlePurchase = async () => {
+    try {
+      if (!productDetails) return;
+
+      const transactionPayload = {
+        seller_id: productDetails.owner_id, // Seller ID
+        item_id: productDetails.item_id, // Item ID
+        transaction_amount: productDetails.price, // Transaction Amount
+      };
+
+      const response = await axios.post(
+        "http://localhost:3000/api/transactions/buy",
+        transactionPayload,
+        { withCredentials: true },
+      );
+
+      if (response.status === 201) {
+        alert("Purchase successful!");
+      } else {
+        alert("Purchase failed.");
+      }
+    } catch (error) {
+      console.error("Purchase error:", error);
+      alert("Please login in order to purchase items.");
+      navigate("/login");
+    }
   };
-
 
   return (
     <div className="mx-auto mt-8 grid max-w-6xl grid-cols-1 gap-10 p-6 lg:grid-cols-2">
@@ -79,22 +106,21 @@ export function ProductSell({ productDetails }: { productDetails: Product | unde
         <div className="text-4xl font-bold text-gray-800">
           ${productDetails?.price}
         </div>
-        {
-          productDetails?.status != 'active' ?
-            <button
-              disabled={true}
-              className="duration:200 rounded-lg bg-rose-800 px-4 py-2 text-white transition ease-in-out hover:bg-rose-700"
-            >
-              Sold
-            </button>
-            :
-            <button
-              onClick={handlePurchase}
-              className="duration:200 rounded-lg bg-[#3A5B22] px-4 py-2 text-white transition ease-in-out hover:bg-[#2F4A1A]"
-            >
-              Buy Now
-            </button>
-        }
+        {productDetails?.status != "active" ? (
+          <button
+            disabled={true}
+            className="duration:200 rounded-lg bg-rose-800 px-4 py-2 text-white transition ease-in-out hover:bg-rose-700"
+          >
+            Sold
+          </button>
+        ) : (
+          <button
+            onClick={handlePurchase}
+            className="duration:200 rounded-lg bg-[#3A5B22] px-4 py-2 text-white transition ease-in-out hover:bg-[#2F4A1A]"
+          >
+            Buy Now
+          </button>
+        )}
         <details className="rounded-lg border border-gray-300 p-4">
           <summary className="cursor-pointer font-semibold">
             Description
@@ -108,7 +134,6 @@ export function ProductSell({ productDetails }: { productDetails: Product | unde
 
 // -------------------- ProductBid Component --------------------
 export function ProductBid({ productDetails }: { productDetails: Product }) {
-
   const [currentBid, setCurrentBid] = useState(productDetails.price);
   const [newBid, setNewBid] = useState("");
 
@@ -122,7 +147,6 @@ export function ProductBid({ productDetails }: { productDetails: Product }) {
       alert("Your bid must be higher than the current bid.");
     }
   };
-
 
   return (
     <div className="mx-auto mt-8 grid max-w-6xl grid-cols-1 gap-10 p-6 lg:grid-cols-2">
@@ -193,10 +217,11 @@ export default function ProductPage() {
     const fetchProduct = async () => {
       try {
         if (id) {
-          const res = await axios.get(`http://localhost:3000/api/listings/product/${id}`,
+          const res = await axios.get(
+            `http://localhost:3000/api/listings/product/${id}`,
             {
-              withCredentials: true
-            }
+              withCredentials: true,
+            },
           );
 
           if (!res.data) {

@@ -350,6 +350,7 @@ export type Database = {
           password_hash: string;
           role: string;
           status: string;
+          suspension_count: number | null;
           user_id: number;
           username: string;
           vip: boolean;
@@ -364,6 +365,7 @@ export type Database = {
           password_hash: string;
           role?: string;
           status?: string;
+          suspension_count?: number | null;
           user_id?: number;
           username: string;
           vip: boolean;
@@ -378,6 +380,7 @@ export type Database = {
           password_hash?: string;
           role?: string;
           status?: string;
+          suspension_count?: number | null;
           user_id?: number;
           username?: string;
           vip?: boolean;

@@ -14,7 +14,6 @@ import AdminPanel from "./pages/AdminPanel.tsx";
 import ErrorPage from "./pages/ErrorPage.tsx";
 
 import PrivateRoute from "./components/PrivateRoute.tsx";
-import Rating from "./components/Rate.tsx";
 
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
@@ -30,9 +29,28 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/listings" element={<Listings />} />
             <Route path="/item/:id" element={<ProductPage />} />
-            <Route path="/cart" element={<CartPage />} />
 
-            <Route path="/create" element={<CreateListing />} />
+            {/* cart page */}
+            <Route
+              path="/cart"
+              element={
+                <PrivateRoute>
+                  <CartPage />
+                </PrivateRoute>
+              }
+            />
+
+            {/* create page */}
+            <Route
+              path="/create"
+              element={
+                <PrivateRoute>
+                  <CreateListing />
+                </PrivateRoute>
+              }
+            />
+
+            {/* profile page */}
             <Route
               path="/profile"
               element={
@@ -41,6 +59,8 @@ function App() {
                 </PrivateRoute>
               }
             />
+
+            {/* admin panel */}
             <Route
               path="/admin"
               element={
