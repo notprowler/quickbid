@@ -234,23 +234,34 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
         return res.status(500).json({ error: error.message });
       }
 
-      // If the listing is of type auction, create a new entry in the bids table
+      // If the listing is of type auction, create a new entry in the bids table.
       if (type === "auction") {
-        const listingId = data[0].item_id; // Assuming item_id is the primary key
-        const { error: bidError } = await supabase
-          .from("bids")
-          .insert([
-            {
-              item_id: listingId,
-              bid_amount: price,
-              created_at: created_at,
-              bid_deadline: "2024-12-11 15:30:45", //TODO: Using hardcoded value for now, need to give it value from frontent
-              bid_status: "pending"
-            },
-          ]);
+        const { data: listingData, error: listingError } = await supabase
+          .from("listings")
+          .select("*")
+          .eq("owner_id", owner_id)
+          .eq("title", title)
+          .single();
+
+        if (listingError) {
+          throw new Error(listingError.message);
+        }
+
+        const item_id = listingData?.item_id;
+
+        if (!item_id) {
+          throw new Error("Failed to retrieve item ID for the auction listing.");
+        }
+
+        const { error: bidError } = await supabase.from("bids").insert({
+          item_id: item_id,
+          bid_amount: price,
+          bid_deadline: "2024-12-11 15:30:45", // TODO: Using hardcoded value for now, need to give it value from frontend
+          bid_status: "pending",
+        });
 
         if (bidError) {
-          return res.status(500).json({ error: bidError.message });
+          throw new Error(bidError.message);
         }
       }
 

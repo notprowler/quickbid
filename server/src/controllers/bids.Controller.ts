@@ -1,33 +1,6 @@
 import supabase from "@/config/database";
 import type { Request, RequestHandler, Response } from "express";
 
-const newBid: RequestHandler = async (req: Request, res: Response) => {
-    const { itemID } = req.params;
-    const { bidderID, bidValue, bidDeadline } = req.body;
-
-    if (!itemID) {
-        res.status(400).json({ error: 'Item ID is required' });
-        return;
-    }
-
-    try {
-        const { data, error } = await supabase
-            .from('bids')
-            .insert([{ item_id: parseInt(itemID, 10), bidder_id: bidderID, bid_amount: bidValue, bid_deadline: bidDeadline, bid_status: 'pending' }])
-            .eq('item_id', itemID)
-            .select();
-
-        if (error) throw error;
-        res.status(200).json(data);
-    } catch (e) {
-        if (e instanceof Error) {
-            res.status(500).json({ error: `${e.message}` });
-        } else if (typeof e === 'object' && e !== null && 'message' in e) {
-            res.status(500).json({ error: `${e.message}` });
-        }
-    }
-}
-
 const retrieveAllBids: RequestHandler = async (req: Request, res: Response) => {
     const { itemID } = req.params;
 
@@ -138,7 +111,7 @@ const bidRejected: RequestHandler = async (req: Request, res: Response) => {
 // 1. deduct money from users account. 
 // 2. Update the New Highest bidder and bid amount
 // 3. If the deadline is hit then the listings becomes deactivated and owners gets to decide wether to sell or not
-// 4. 
+// 4. ??
 const placeBid: RequestHandler = async (req: Request, res: Response) => {
     const { itemID } = req.params;
     const { bidValue} = req.body;
@@ -228,4 +201,4 @@ const placeBid: RequestHandler = async (req: Request, res: Response) => {
     }
 }
 
-export default { newBid, retrieveAllBids, bidAccepted, bidRejected, placeBid }
+export default { retrieveAllBids, bidAccepted, bidRejected, placeBid }
