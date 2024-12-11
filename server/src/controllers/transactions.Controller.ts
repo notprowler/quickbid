@@ -1,9 +1,15 @@
 import supabase from "@/config/database";
 import type { Request, RequestHandler, Response } from "express";
-import { checkVIPStatus, applyVIPDiscount, demoteVIP } from "./vipUtils";
+import {
+  checkVIPStatus,
+  applyVIPDiscount,
+  demoteVIP,
+  promoteToVIP,
+} from "../util/VIP";
 
 const newTransaction: RequestHandler = async (req: Request, res: Response) => {
-  const { sellerID, buyerID, itemID, transaction_amount, discount_applied } = req.body;
+  const { sellerID, buyerID, itemID, transaction_amount, discount_applied } =
+    req.body;
 
   try {
     const { data, error } = await supabase
@@ -30,7 +36,10 @@ const newTransaction: RequestHandler = async (req: Request, res: Response) => {
   }
 };
 
-const getTransactionsForCart: RequestHandler = async (req: Request, res: Response) => {
+const getTransactionsForCart: RequestHandler = async (
+  req: Request,
+  res: Response
+) => {
   const userId = req.user?.user_id;
 
   if (!userId) {
@@ -57,7 +66,10 @@ const getTransactionsForCart: RequestHandler = async (req: Request, res: Respons
   }
 };
 
-const getTransactionsForProfile: RequestHandler = async (req: Request, res: Response) => {
+const getTransactionsForProfile: RequestHandler = async (
+  req: Request,
+  res: Response
+) => {
   const userId = req.user?.user_id;
 
   if (!userId) {
@@ -85,7 +97,10 @@ const getTransactionsForProfile: RequestHandler = async (req: Request, res: Resp
 };
 
 /* updating the buyer rating, from user as seller perspective sets rated to true where seller_id is the user */
-const ProfileRatingSubmitted: RequestHandler = async (req: Request, res: Response) => {
+const ProfileRatingSubmitted: RequestHandler = async (
+  req: Request,
+  res: Response
+) => {
   const userId = req.user?.user_id;
 
   if (!userId) {
@@ -115,7 +130,10 @@ const ProfileRatingSubmitted: RequestHandler = async (req: Request, res: Respons
 };
 
 /* updating the seller rating, from user as buyer perspective sets rated to true where buyer_id is the user */
-const CartRatingSubmitted: RequestHandler = async (req: Request, res: Response) => {
+const CartRatingSubmitted: RequestHandler = async (
+  req: Request,
+  res: Response
+) => {
   const userId = req.user?.user_id;
 
   if (!userId) {
@@ -162,7 +180,10 @@ const createTransaction: RequestHandler = async (req, res) => {
       .single();
 
     if (buyerError || !buyerData) {
-      console.error("Error fetching buyer:", buyerError?.message || "Not found");
+      console.error(
+        "Error fetching buyer:",
+        buyerError?.message || "Not found"
+      );
       res.status(404).json({ error: "Buyer not found." });
       return;
     }
@@ -177,7 +198,10 @@ const createTransaction: RequestHandler = async (req, res) => {
       .single();
 
     if (sellerError || !sellerData) {
-      console.error("Error fetching seller:", sellerError?.message || "Not found");
+      console.error(
+        "Error fetching seller:",
+        sellerError?.message || "Not found"
+      );
       res.status(404).json({ error: "Seller not found." });
       return;
     }
@@ -203,7 +227,10 @@ const createTransaction: RequestHandler = async (req, res) => {
       .eq("user_id", buyer_id);
 
     if (buyerUpdateError) {
-      console.error("Error during buyer balance update:", buyerUpdateError.message);
+      console.error(
+        "Error during buyer balance update:",
+        buyerUpdateError.message
+      );
       throw new Error("Failed to update buyer's balance.");
     }
 
@@ -214,7 +241,10 @@ const createTransaction: RequestHandler = async (req, res) => {
       .eq("user_id", seller_id);
 
     if (sellerUpdateError) {
-      console.error("Error during seller balance update:", sellerUpdateError.message);
+      console.error(
+        "Error during seller balance update:",
+        sellerUpdateError.message
+      );
       throw new Error("Failed to update seller's balance.");
     }
 
@@ -247,6 +277,9 @@ const createTransaction: RequestHandler = async (req, res) => {
 
     // Check if the user should be demoted from VIP status
     await demoteVIP(buyer_id);
+
+    // Check if we should promote the user to VIP status
+    await promoteToVIP(buyer_id);
 
     res.status(201).json({ message: "Transaction successful." });
   } catch (error) {
