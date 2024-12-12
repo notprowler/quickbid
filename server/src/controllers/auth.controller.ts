@@ -80,6 +80,7 @@ const loginUser = async (req: Request, res: Response): Promise<void> => {
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: 60 * 60 * 24 * 30 * 1000,
+        path: "/",
       });
 
       res.json("LOGGED IN");
@@ -87,7 +88,25 @@ const loginUser = async (req: Request, res: Response): Promise<void> => {
   });
 };
 
+const logOutUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    res.clearCookie("access-token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    });
+
+    res.status(200).json({ message: "Successfully logged user out" });
+  } catch (error) {
+    console.error("Error logging out user:", error);
+    res.status(500).json({ error: "Failed to log out user" });
+  }
+};
+
+
 export default {
   registerUser,
   loginUser,
+  logOutUser
 };

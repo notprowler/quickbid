@@ -118,7 +118,7 @@ export type Database = {
           complaints_id: number;
           created_at: string;
           seller_id: number;
-          status: Database["public"]["Enums"]["complaints_status"];
+          status: string;
           transaction_id: number;
         };
         Insert: {
@@ -127,7 +127,7 @@ export type Database = {
           complaints_id?: number;
           created_at?: string;
           seller_id: number;
-          status: Database["public"]["Enums"]["complaints_status"];
+          status: string;
           transaction_id: number;
         };
         Update: {
@@ -136,7 +136,7 @@ export type Database = {
           complaints_id?: number;
           created_at?: string;
           seller_id?: number;
-          status?: Database["public"]["Enums"]["complaints_status"];
+          status?: string;
           transaction_id?: number;
         };
         Relationships: [
@@ -165,7 +165,9 @@ export type Database = {
       };
       listings: {
         Row: {
+          bid_deadline: string | null;
           category: string | null;
+          comments: string[] | null;
           created_at: string;
           description: string;
           image: string[] | null;
@@ -177,7 +179,9 @@ export type Database = {
           type: string;
         };
         Insert: {
+          bid_deadline?: string | null;
           category?: string | null;
+          comments?: string[] | null;
           created_at?: string;
           description: string;
           image?: string[] | null;
@@ -189,7 +193,9 @@ export type Database = {
           type: string;
         };
         Update: {
+          bid_deadline?: string | null;
           category?: string | null;
+          comments?: string[] | null;
           created_at?: string;
           description?: string;
           image?: string[] | null;

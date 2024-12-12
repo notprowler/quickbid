@@ -76,6 +76,7 @@ const CartPage: React.FC = () => {
     },
   ]);
 
+  const [error, setError] = useState<string | null>(null);
   const [timers, setTimers] = useState<{ [id: number]: string }>({});
   const [boughtItems, setBoughtItems] = useState<UserTransactions[]>([]);
   const [showBoughtItems, setShowBoughtItems] = useState<boolean>(false);
@@ -132,8 +133,14 @@ const CartPage: React.FC = () => {
 
         console.log("Fetched Bought Items:", res.data);
         setBoughtItems(res.data);
-      } catch (error) {
-        console.error("Error fetching bought items:", error);
+      } catch (e: any) {
+        if (e.response) {
+          console.error("API Error:", e.response.data.error);
+          setError(e.response.data.error || "Unexpected API error occurred.");
+        } else if (e.request) {
+          console.error("No response from server:", e.request);
+          setError("Failed to connect to the server. Please try again later.");
+        }
       }
     };
 
@@ -154,6 +161,15 @@ const CartPage: React.FC = () => {
     (item) =>
       item.listings?.status === "sold" || item.listings?.status === "pending",
   );
+
+  if (error) {
+    return (
+      <div className="mt-10 text-center">
+        <h1 className="text-2xl font-bold">Error</h1>
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative mx-auto max-w-7xl p-4">

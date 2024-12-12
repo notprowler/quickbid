@@ -85,10 +85,13 @@ export function ProductSell({
       } else {
         alert("Purchase failed.");
       }
-    } catch (error) {
-      console.error("Purchase error:", error);
-      alert("Please login in order to purchase items.");
-      navigate("/login");
+    } catch (e: any) {
+      if (e.response) {
+        console.error("API Error:", e.response.data.error);
+        alert("Please be a active user to purchase this product");
+      } else if (e.request) {
+        console.error("No response from server:", e.request);
+      }
     }
   };
 

@@ -187,6 +187,7 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
         // Upload to Supabase storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("images")
+
           .upload(fileName, file.buffer, {
             contentType: file.mimetype,
             upsert: true,

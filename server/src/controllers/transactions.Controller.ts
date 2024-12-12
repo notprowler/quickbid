@@ -46,7 +46,7 @@ const getTransactionsForCart: RequestHandler = async (
       .from("transactions")
       .select(`*, listings("*")`)
       .order("created_at", { ascending: false })
-      .eq("buyer_id", 28);
+      .eq("buyer_id", userId);
 
     if (error) throw error;
 
@@ -62,6 +62,7 @@ const getTransactionsForCart: RequestHandler = async (
 
 const getTransactionsForProfile: RequestHandler = async (req, res) => {
   const userId = req.user?.user_id;
+  console.log(userId);
 
   if (!userId) {
     res.status(400).json({ error: "Unauthorized User" });
