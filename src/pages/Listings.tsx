@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
 import { getListings } from "../api/listingsApi";
-
 import { FaFilter } from "react-icons/fa";
+import Chatbot from "../components/Chatbot"; // Import the Chatbot component
 
 interface Listing {
   item_id: number;
@@ -35,6 +34,13 @@ export default function Listings() {
   const [appliedMinPrice, setAppliedMinPrice] = useState<number | null>(null);
   const [appliedMaxPrice, setAppliedMaxPrice] = useState<number | null>(null);
 
+  // state for chatbot visibility
+  const [isChatbotVisible, setIsChatbotVisible] = useState(false);
+
+  const toggleChatbot = () => {
+    setIsChatbotVisible((prev) => !prev);
+  };
+
   // navigate to corresponding product
   const navigate = useNavigate();
 
@@ -51,7 +57,7 @@ export default function Listings() {
     };
 
     fetchListings();
-  });
+  }, []);
 
   const handleSearchClick = () => {
     setQuery(searchTerm);
@@ -245,6 +251,21 @@ export default function Listings() {
           </div>
         ))}
       </div>
+
+      {/* Chatbot Toggle Button */}
+      <button
+        onClick={toggleChatbot}
+        className="fixed bottom-4 right-4 rounded-full bg-blue-500 px-4 py-2 text-white"
+      >
+        {isChatbotVisible ? "Hide Chatbot" : "Show Chatbot"}
+      </button>
+
+      {/* Chatbot Component */}
+      {isChatbotVisible && (
+        <div className="fixed bottom-50 right-42 w-80 h-80 bg-white border border-gray-300 shadow-lg">
+          <Chatbot />
+        </div>
+      )}
     </div>
   );
 }
