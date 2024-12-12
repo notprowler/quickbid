@@ -123,29 +123,52 @@ const updateUserStatus: RequestHandler = async (
   req: Request,
   res: Response
 ) => {
-  const { id } = req.params;
-  const { status } = req.body;
+  const userRole = req.user?.role; // Assuming validateAccessToken middleware sets req.user
 
+  // Ensure the request is made by an Admin
+  if (userRole !== "Admin") {
+    res.status(403).json({ error: "Forbidden: Admin access required." });
+    return;
+  }
+
+  const { id } = req.params; // Get user ID from request parameters
+
+  // Validate ID presence
   if (!id) {
-    res.status(400).json({ error: "Please provide a User ID" });
+    res.status(400).json({ error: "User ID is required." });
     return;
   }
 
   try {
+    // Update the user's status to 'active' in the 'users' table
     const { data, error } = await supabase
       .from("users")
-      .update({ status })
-      .eq("user_id", id)
-      .select();
+      .update({ status: "active" }) // Change status to 'active'
+      .eq("user_id", id) // Match the specific user by ID
+      .select(); // Return updated data for verification
 
-    if (error) throw error;
-    res.status(200).json(data);
-  } catch (e) {
-    if (e instanceof Error) {
-      res.status(500).json({ error: `${e.message}` });
-    } else if (typeof e === "object" && e !== null && "message" in e) {
-      res.status(500).json({ error: `${e.message}` });
+    // Handle database errors
+    if (error) {
+      console.error("Database Error:", error);
+      res
+        .status(500)
+        .json({ error: `Failed to update user status: ${error.message}` });
+      return;
     }
+
+    // Handle case where no rows are updated (e.g., user not found)
+    if (!data || data.length === 0) {
+      res.status(404).json({ error: "User not found or already active." });
+      return;
+    }
+
+    // Respond with success message
+    res
+      .status(200)
+      .json({ message: "User status updated successfully.", data });
+  } catch (err) {
+    console.error("Unexpected Error in updateUserStatus:", err);
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -172,6 +195,7 @@ const updateAverageRating: (userRatings: any) => Promise<void> = async (
       4 * userRatings.four_ratings +
       5 * userRatings.five_ratings) /
     R;
+
 
   const updates: { average_rating: number, status?: string } = {
     average_rating: parseFloat(sum.toFixed(1)),
@@ -483,7 +507,82 @@ const rejectPendingUser: RequestHandler = async (req, res) => {
   }
 };
 
-const LiftUserSuspension: RequestHandler = async (req: Request, res: Response) => {
+// get pending complaints
+const getPendingComplaints: RequestHandler = async (req, res) => {
+  console.log("User Role:", req.user?.role);
+
+  if (req.user?.role !== "Admin") {
+    res.status(403).json({ error: "Forbidden: Super-user access required." });
+    return;
+  }
+
+  try {
+    const statusFilter = "pending"; // Explicitly define the filter
+    console.log("Executing query with filter: status =", statusFilter);
+
+    const { data, error } = await supabase
+      .from("complaints")
+      .select("*")
+      .filter("status::text", "eq", "pending"); // Force `status` to text
+
+    console.log("Supabase Response Data:", data);
+    console.log("Supabase Response Error:", error);
+
+    if (error) {
+      res
+        .status(500)
+        .json({ error: `Database query failed: ${error.message}` });
+      return;
+    }
+
+    res.status(200).json(data);
+  } catch (err) {
+    console.error("Unexpected Error in getPendingUsers:", err);
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+// get all suspended accounts
+const getSuspendedAccounts: RequestHandler = async (req, res) => {
+  console.log("User Role:", req.user?.role);
+
+  if (req.user?.role !== "Admin") {
+    res.status(403).json({ error: "Forbidden: Super-user access required." });
+    return;
+  }
+
+  try {
+    const statusFilter = "suspended"; // Explicitly define the filter
+    console.log("Executing query with filter: status =", statusFilter);
+
+    // Include 'id' explicitly in the select statement
+    const { data, error } = await supabase
+      .from("users")
+      .select("user_id, username, email, address, status, created_at") // Add 'id' here
+      .filter("status::text", "eq", "suspended"); // Filter by suspended status
+
+    console.log("Supabase Response Data:", data);
+    console.log("Supabase Response Error:", error);
+
+    if (error) {
+      res
+        .status(500)
+        .json({ error: `Database query failed: ${error.message}` });
+      return;
+    }
+
+    res.status(200).json(data);
+  } catch (err) {
+    console.error("Unexpected Error in getSuspendedAccounts:", err);
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+const LiftUserSuspension: RequestHandler = async (
+  req: Request,
+  res: Response
+) => {
+
   const userId = req.user?.user_id;
 
   if (!userId) {
@@ -494,18 +593,25 @@ const LiftUserSuspension: RequestHandler = async (req: Request, res: Response) =
   const { id } = req.params;
 
   if (!id) {
-    res.status(400).json({ error: "Please provide the ID of the suspended user" });
+    res
+      .status(400)
+      .json({ error: "Please provide the ID of the suspended user" });
+
     return;
   }
 
   try {
     const { data, error } = await supabase
-      .from('users')
+      .from("users")
+
       .update({ status: "active" })
       .eq("user_id", parseInt(id, 10))
       .select();
 
-    if (error) { throw error }
+    if (error) {
+      throw error;
+    }
+
 
     res.status(200).json(data);
   } catch (e) {
@@ -515,9 +621,13 @@ const LiftUserSuspension: RequestHandler = async (req: Request, res: Response) =
       res.status(500).json({ error: `${e.message}` });
     }
   }
-}
+};
 
-const AccountTerminationRequest: RequestHandler = async (req: Request, res: Response) => {
+const AccountTerminationRequest: RequestHandler = async (
+  req: Request,
+  res: Response
+) => {
+
   const userId = req.user?.user_id;
 
   if (!userId) {
@@ -534,12 +644,16 @@ const AccountTerminationRequest: RequestHandler = async (req: Request, res: Resp
 
   try {
     const { data, error } = await supabase
-      .from('users')
+      .from("users")
+
       .update({ termination_request: true })
       .eq("user_id", parseInt(id, 10))
       .select();
 
-    if (error) { throw error }
+    if (error) {
+      throw error;
+    }
+
 
     res.status(200).json(data);
   } catch (e) {
@@ -549,7 +663,8 @@ const AccountTerminationRequest: RequestHandler = async (req: Request, res: Resp
       res.status(500).json({ error: `${e.message}` });
     }
   }
-}
+};
+
 
 export {
   getUser,
@@ -563,6 +678,9 @@ export {
   getPendingUsers,
   approvePendingUser,
   rejectPendingUser,
+  AccountTerminationRequest,
   LiftUserSuspension,
-  AccountTerminationRequest
+  getPendingComplaints,
+  getSuspendedAccounts,
+
 };

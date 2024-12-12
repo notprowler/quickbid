@@ -1,5 +1,11 @@
 import supabase from "@/config/database";
 import type { Request, RequestHandler, Response } from "express";
+import {
+  checkVIPStatus,
+  applyVIPDiscount,
+  demoteVIP,
+  promoteToVIP,
+} from "../util/VIP";
 
 const newTransaction: RequestHandler = async (req: Request, res: Response) => {
   const { sellerID, buyerID, itemID, transaction_amount, discount_applied } =
@@ -206,6 +212,13 @@ const createTransaction: RequestHandler = async (req, res) => {
     if (transactionError) {
       throw new Error(transactionError.message);
     }
+
+    // Check if the user should be demoted from VIP status
+    await demoteVIP(buyer_id);
+
+    // Check if we should promote the user to VIP status
+    await promoteToVIP(buyer_id);
+
 
     // Update the listing to pending status
     const { error: listingUpdateError } = await supabase

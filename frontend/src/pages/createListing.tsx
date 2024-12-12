@@ -8,9 +8,11 @@ const CreateListing: React.FC = () => {
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
   const [ownerId, setOwnerId] = useState("");
+  const [deadline, setDeadline] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
   const [deadline, setDeadline] = useState("");
+
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,6 +31,11 @@ const CreateListing: React.FC = () => {
     // formData.append('owner_id', ownerId); // Add a default owner_id for testing
 
     // Append multiple images
+    if(type === 'auction')
+    {
+      formData.append('deadline', new Date(deadline).toISOString());
+    }
+
     images.forEach((image) => {
       formData.append("images", image);
     });
@@ -150,6 +157,7 @@ const CreateListing: React.FC = () => {
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className="w-full rounded border border-gray-300 p-2"
+
             required
             >
             <option value="" disabled>Select a category</option>
@@ -165,6 +173,18 @@ const CreateListing: React.FC = () => {
             <option value="Others">Others</option>
           </select>
         </div>
+        {type === 'auction' && (
+          <div className="mb-4">
+            <label className="mb-2 block text-sm font-medium text-gray-700">Deadline</label>
+            <input
+              type="datetime-local"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+              className="w-full rounded border border-gray-300 p-2"
+              required
+            />
+          </div>
+        )}
         <div className="form-group">
           <label className="mb-1 block font-semibold">Images (up to 5):</label>
           <input

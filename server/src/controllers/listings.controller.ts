@@ -172,6 +172,12 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    if (type === "auction" && !deadline) {
+      return res
+        .status(400)
+        .json({ error: "Please provide a deadline for auction listings" });
+    }
+
     let imageUrls: string[] = [];
 
     // Handle image uploads to Supabase storage
@@ -184,6 +190,7 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
         // Upload to Supabase storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("images")
+
           .upload(fileName, file.buffer, {
             contentType: file.mimetype,
             upsert: true,
@@ -226,6 +233,7 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
             status,
             type,
             category,
+            deadline: type === "auction" ? deadline : null,
             image: imageUrls,
             bid_deadline: type === "auction" ? deadline : null,
           },
@@ -252,12 +260,16 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
         const item_id = listingData?.item_id;
 
         if (!item_id) {
-          throw new Error("Failed to retrieve item ID for the auction listing.");
+          throw new Error(
+            "Failed to retrieve item ID for the auction listing."
+          );
+
         }
 
         const { error: bidError } = await supabase.from("bids").insert({
           item_id: item_id,
           bid_amount: price,
+
           bid_deadline: deadline,
           bid_status: "pending",
         });

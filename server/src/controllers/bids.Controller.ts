@@ -68,13 +68,31 @@ const bidAccepted: RequestHandler = async (req: Request, res: Response) => {
       return;
     }
 
-    await rejectAllBids(itemID, data[0].bid_id);
-    res.status(200).json(data);
-  } catch (e) {
-    if (e instanceof Error) {
-      res.status(500).json({ error: `${e.message}` });
-    } else if (typeof e === "object" && e !== null && "message" in e) {
-      res.status(500).json({ error: `${e.message}` });
+    try {
+        const { data, error } = await supabase
+            .from('bids')
+            .update({ bid_status: 'accepted' })
+            .eq('item_id', itemID)
+            .eq('bidder_id', bidderID)
+            .eq('bid_amount', bidValue)
+            .select();
+
+        if (error) throw error;
+
+        if (!data || !data[0]) {
+            res.status(500).json({ error: 'Error updating row' });
+            return;
+        }
+
+        rejectAllBids(itemID, data[0].bid_id)
+        res.status(200).json(data);
+    } catch (e) {
+        if (e instanceof Error) {
+            res.status(500).json({ error: `${e.message}` });
+        } else if (typeof e === 'object' && e !== null && 'message' in e) {
+            res.status(500).json({ error: `${e.message}` });
+        }
+
     }
   }
 };
@@ -219,6 +237,7 @@ const placeBid: RequestHandler = async (req: Request, res: Response) => {
       .select();
 
     if (bidError) throw bidError;
+
 
     res.status(200).json(bidData);
 
