@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import Stripe from "stripe";
 import supabase from "@/config/database";
 import { validateAccessToken } from "@/util/JWT";
+import SuspensionPolicy from "@/middlewares/suspension";
 
 const router = express.Router();
 
@@ -31,6 +32,7 @@ router.post("/create-payment-intent", async (req: Request, res: Response) => {
 router.post(
   "/update-balance",
   validateAccessToken,
+  SuspensionPolicy,
   async (req: Request, res: Response) => {
     const { user_id } = req.user!; // Assuming `validateAccessToken` adds user info
     const { amount } = req.body;

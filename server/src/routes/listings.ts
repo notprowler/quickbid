@@ -1,21 +1,17 @@
 import express from "express";
 import listingsController from "@/controllers/listings.controller";
+import SuspensionPolicy from '@/middlewares/suspension';
 import { validateAccessToken } from "@/util/JWT";
 const router = express.Router();
 
+/* Visitors route to view listings and individual product information */
 router.get("/", listingsController.getListings);
-router.post("/", validateAccessToken, listingsController.createListing);
 router.get("/product/:id", listingsController.getProductInformation);
-router.delete(
-  "/removeProduct/:id",
-  validateAccessToken,
-  listingsController.removeProduct
-);
-router.get(
-  "/profile/user",
-  validateAccessToken,
-  listingsController.getProfileListings
-);
+
+/* Routes accessible after becoming User */
+router.post("/", validateAccessToken, SuspensionPolicy, listingsController.createListing);
+router.delete("/removeProduct/:id", validateAccessToken, SuspensionPolicy, listingsController.removeProduct);
+router.get("/profile/user", validateAccessToken, SuspensionPolicy, listingsController.getProfileListings);
 
 // router.delete('/:id', )
 // router.patch('/:id', )

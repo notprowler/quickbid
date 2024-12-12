@@ -173,9 +173,17 @@ const updateAverageRating: (userRatings: any) => Promise<void> = async (
       5 * userRatings.five_ratings) /
     R;
 
+  const updates: { average_rating: number, status?: string } = {
+    average_rating: parseFloat(sum.toFixed(1)),
+  }
+
+  if ((sum < 2.00 && R >= 3) || (sum > 4.00 && R >= 3)) {
+    updates.status = "suspended";
+  }
+
   const { data, error } = await supabase
     .from("users")
-    .update({ average_rating: parseFloat(sum.toFixed(1)) })
+    .update(updates)
     .eq("user_id", userRatings.user_id);
 
   if (error) throw new Error(`${error.message}`);
@@ -475,6 +483,74 @@ const rejectPendingUser: RequestHandler = async (req, res) => {
   }
 };
 
+const LiftUserSuspension: RequestHandler = async (req: Request, res: Response) => {
+  const userId = req.user?.user_id;
+
+  if (!userId) {
+    res.status(401).json({ error: "User is not a Super User" });
+    return;
+  }
+
+  const { id } = req.params;
+
+  if (!id) {
+    res.status(400).json({ error: "Please provide the ID of the suspended user" });
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .update({ status: "active" })
+      .eq("user_id", parseInt(id, 10))
+      .select();
+
+    if (error) { throw error }
+
+    res.status(200).json(data);
+  } catch (e) {
+    if (e instanceof Error) {
+      res.status(500).json({ error: `${e.message}` });
+    } else if (typeof e == "object" && e !== null && "message" in e) {
+      res.status(500).json({ error: `${e.message}` });
+    }
+  }
+}
+
+const AccountTerminationRequest: RequestHandler = async (req: Request, res: Response) => {
+  const userId = req.user?.user_id;
+
+  if (!userId) {
+    res.status(401).json({ error: "User is not a Super User" });
+    return;
+  }
+
+  const { id } = req.params;
+
+  if (!id) {
+    res.status(400).json({ error: "Please provide the ID of the user" });
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .update({ termination_request: true })
+      .eq("user_id", parseInt(id, 10))
+      .select();
+
+    if (error) { throw error }
+
+    res.status(200).json(data);
+  } catch (e) {
+    if (e instanceof Error) {
+      res.status(500).json({ error: `${e.message}` });
+    } else if (typeof e == "object" && e !== null && "message" in e) {
+      res.status(500).json({ error: `${e.message}` });
+    }
+  }
+}
+
 export {
   getUser,
   updateUser,
@@ -487,4 +563,6 @@ export {
   getPendingUsers,
   approvePendingUser,
   rejectPendingUser,
+  LiftUserSuspension,
+  AccountTerminationRequest
 };
