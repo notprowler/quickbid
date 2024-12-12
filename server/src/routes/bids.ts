@@ -1,11 +1,12 @@
 import express from 'express'
 import bidsController from '@/controllers/bids.Controller';
+import { validateAccessToken } from '@/util/JWT';
 import SuspensionPolicy from '@/middlewares/suspension';
 const router = express.Router();
 
-router.post('/:itemID', bidsController.newBid);
 router.get('/:itemID', bidsController.retrieveAllBids);
 router.put('/accept/:itemID', bidsController.bidAccepted);
 router.put('/reject/:itemID', bidsController.bidRejected);
-
+router.post('/place', validateAccessToken,bidsController.placeBid);
+router.post('/place/:itemID', validateAccessToken, bidsController.placeBid);
 export default router

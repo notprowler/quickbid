@@ -39,7 +39,8 @@ const validateAccessToken = (
   try {
     const decoded = jwt.verify(token, process.env.TOKEN_SECRET as string);
 
-    console.log("Decoded JWT:", decoded);
+    // Was flodding the console to commented it for now
+    // console.log("Decoded JWT:", decoded);
 
     if (typeof decoded === "object" && "user_id" in decoded) {
       req.user = decoded as AuthenticatedUser;

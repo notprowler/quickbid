@@ -8,7 +8,7 @@ const getUserProfile: RequestHandler = async (req, res) => {
   console.log("Accessed /profile endpoint");
   const userId = req.user?.user_id; // Check JWT payload structure
 
-  console.log("Authenticated User ID:", userId);
+  // console.log("Authenticated User ID:", userId);
 
   if (!userId) {
     res.status(401).json({ error: "Unauthorized. User ID is required." });
@@ -28,7 +28,7 @@ const getUserProfile: RequestHandler = async (req, res) => {
       return;
     }
 
-    console.log("Fetched User Data:", data);
+    // console.log("Fetched User Data:", data);
     res.status(200).json(data);
   } catch (err) {
     console.error("Error in getUserProfile:", err);

@@ -149,12 +149,27 @@ export function ProductBid({ productDetails }: { productDetails: Product }) {
   const [currentBid, setCurrentBid] = useState(productDetails.price);
   const [newBid, setNewBid] = useState("");
 
-  const handleBid = () => {
+  const handleBid = async () => {
     const bidValue = parseFloat(newBid);
     if (bidValue > currentBid) {
-      setCurrentBid(bidValue);
-      alert(`Your bid of $${bidValue} has been placed!`);
-      setNewBid("");
+      try {
+        const response = await axios.post(
+          `http://localhost:3000/api/bids/place/${productDetails.item_id}`,
+          { bidValue },
+          { withCredentials: true }
+        );
+
+        if (response.status === 200) {
+          setCurrentBid(bidValue);
+          alert(`Your bid of $${bidValue} has been placed!`);
+          setNewBid("");
+        } else {
+          alert("Failed to place bid.");
+        }
+      } catch (error) {
+        console.error("Bid error:", error);
+        alert("Please login in order to place a bid.");
+      }
     } else {
       alert("Your bid must be higher than the current bid.");
     }
