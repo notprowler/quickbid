@@ -33,7 +33,7 @@ async function geminiChat(userMessage: string) {
   const API_KEY = process.env.GOOGLE_API_KEY;
 
   const listings_data = await getAllListings();
-   console.log(listings_data)
+  //  console.log(listings_data)
   if (!listings_data) {
     console.error("No listings data found.");
     return;
@@ -85,13 +85,13 @@ async function geminiChat(userMessage: string) {
   
     return fullText;
   }
-  geminiChat("Can you list all the items with a price over $300");
+  // geminiChat("Can you list all the items with a price over $300");
   router.post('/', async (req: Request, res: Response) => {
     const { message } = req.body;
-    console.log('Received message:', message); // Log the received message
+    // console.log('Received message:', message); // Log the received message
     try {
       const response = await geminiChat(message);
-      console.log('AI Response:', response); // Log the AI response
+      // console.log('AI Response:', response); // Log the AI response
       res.json({ response });
     } catch (error) {
       console.error('Error handling chatbot request:', error);

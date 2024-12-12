@@ -255,14 +255,14 @@ export default function Listings() {
       {/* Chatbot Toggle Button */}
       <button
         onClick={toggleChatbot}
-        className="fixed bottom-4 right-4 rounded-full bg-blue-500 px-4 py-2 text-white"
+        className="fixed bottom-4 right-4 rounded-full bg-[#3A5B22] hover:bg-[#2F4A1A] p-5 text-xl text-white"
       >
         {isChatbotVisible ? "Hide Chatbot" : "Show Chatbot"}
       </button>
 
       {/* Chatbot Component */}
       {isChatbotVisible && (
-        <div className="fixed bottom-50 right-42 w-80 h-80 bg-white border border-gray-300 shadow-lg">
+        <div className="fixed inset-0 z-50 max-w-fit max-h-10 w-fit h-fit bg-white border border-gray-300 shadow-lg">
           <Chatbot />
         </div>
       )}
