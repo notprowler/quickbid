@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, Paper, AppBar, Toolbar } from '@mui/material';
 import axios from 'axios';
@@ -71,7 +70,7 @@ const Chatbot: React.FC = () => {
   return (
     <Box sx={{ fontFamily: 'Arial, sans-serif' }}>
     <Box sx={{ padding: '25px', border: '2px solid black', borderRadius: '16px', width: '600px', margin: 'auto', marginTop: '50px', backgroundColor: '#fff' }}>
-      <AppBar position="static" sx={{ backgroundColor: 'green', borderRadius: '16px 16px 0 0' }}>
+      <AppBar position="static" sx={{ backgroundColor: '#3A5B22', borderRadius: '16px 16px 0 0' }}>
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1, textAlign: 'center' }}>
             Chatbot
@@ -87,11 +86,12 @@ const Chatbot: React.FC = () => {
                 display: 'inline-block',
                 padding: '10px',
                 borderRadius: '20px',
-                backgroundColor: conv.role === 'user' ? 'lightblue' : 'lightgreen',
+                textcolor: 'white',
+                backgroundColor: conv.role === 'user' ? '#758c64' : '#3A5B22',
                 maxWidth: '80%',
               }}
             >
-              <Typography variant="body1" sx={{ color: 'black' }}>
+              <Typography variant="body1" sx={{ color: 'white' }}>
                 {conv.text}
               </Typography>
             </Paper>
@@ -111,7 +111,7 @@ const Chatbot: React.FC = () => {
         }}
         sx={{ marginBottom: '10px' }}
       />
-      <Button variant="contained" sx={{ backgroundColor: 'green', color: 'white' }} fullWidth onClick={handleSubmit} disabled={loading}>
+      <Button variant="contained" sx={{ backgroundColor: '#3A5B22', color: 'white' }} fullWidth onClick={handleSubmit} disabled={loading}>
         {loading ? 'Sending...' : 'Send'}
       </Button>
     </Box>

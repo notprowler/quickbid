@@ -8,7 +8,6 @@ const CreateListing: React.FC = () => {
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
   const [ownerId, setOwnerId] = useState("");
-  const [deadline, setDeadline] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
   const [deadline, setDeadline] = useState("");
