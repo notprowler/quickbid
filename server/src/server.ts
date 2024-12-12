@@ -13,6 +13,7 @@ import transactionsRouter from "@/routes/transactions";
 import registerRoutes from "@/routes/register";
 import authRouter from "@/routes/auth";
 import paymentRoutes from "@/routes/payments";
+import chatbotRouter from "@/routes/chatbot";
 
 const app: Application = express();
 const PORT = process.env.SERVER_PORT || 3000;
@@ -50,3 +51,4 @@ app.use("/auth", authRouter);
 app.use("/api/visitors/register", registerRoutes);
 
 app.use("/api/payments", paymentRoutes);
+app.use('/api/chatbot', chatbotRouter); 
