@@ -151,8 +151,8 @@ const CreateListing: React.FC = () => {
             onChange={(e) => setCategory(e.target.value)}
             className="w-full rounded border border-gray-300 p-2"
             required
-          >
-            <option value="All">All</option>
+            >
+            <option value="" disabled>Select a category</option>
             <option value="Clothes">Clothes</option>
             <option value="Electronics">Electronics</option>
             <option value="Furniture">Furniture</option>
@@ -162,6 +162,7 @@ const CreateListing: React.FC = () => {
             <option value="Garden & Outdoor">Garden & Outdoor</option>
             <option value="Musical Instruments">Musical Instruments</option>
             <option value="Office Supplies">Office Supplies</option>
+            <option value="Others">Others</option>
           </select>
         </div>
         <div className="form-group">
