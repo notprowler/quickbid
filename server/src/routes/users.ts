@@ -12,6 +12,8 @@ import {
   getPendingUsers,
   approvePendingUser,
   rejectPendingUser,
+  getPendingComplaints,
+  getSuspendedAccounts,
 } from "@/controllers/users.controller";
 import { validateAccessToken } from "@/util/JWT";
 
@@ -22,7 +24,7 @@ router.get("/:id", getUser);
 router.get("/application/pending", validateAccessToken, getPendingUsers);
 router.delete("/:id", deleteUser);
 router.put("/:id", updateUser);
-router.put("/status/:id", updateUserStatus);
+router.put("/status/:id", validateAccessToken, updateUserStatus);
 router.put("/rating/:id", validateAccessToken, updateUserRating);
 router.post("/approve/:id", validateAccessToken, approvePendingUser);
 router.post("/reject/:id", validateAccessToken, rejectPendingUser);
@@ -32,5 +34,12 @@ router.post(
   ProfileUserComplaint
 );
 router.post("/cart-complaint/:id", validateAccessToken, CartUserComplaint);
+router.get(
+  "/application/complaints",
+  validateAccessToken,
+  getPendingComplaints
+);
+
+router.get("/application/suspended", validateAccessToken, getSuspendedAccounts);
 
 export default router;

@@ -40,7 +40,7 @@ export type Database = {
           bid_deadline: string;
           bid_id: number;
           bid_status: Database["public"]["Enums"]["bid_status"];
-          bidder_id: number;
+          bidder_id: number | null;
           created_at: string;
           item_id: number;
           updated_at: string | null;
@@ -50,7 +50,7 @@ export type Database = {
           bid_deadline: string;
           bid_id?: number;
           bid_status: Database["public"]["Enums"]["bid_status"];
-          bidder_id: number;
+          bidder_id?: number | null;
           created_at?: string;
           item_id: number;
           updated_at?: string | null;
@@ -60,7 +60,7 @@ export type Database = {
           bid_deadline?: string;
           bid_id?: number;
           bid_status?: Database["public"]["Enums"]["bid_status"];
-          bidder_id?: number;
+          bidder_id?: number | null;
           created_at?: string;
           item_id?: number;
           updated_at?: string | null;
@@ -118,7 +118,7 @@ export type Database = {
           complaints_id: number;
           created_at: string;
           seller_id: number;
-          status: Database["public"]["Enums"]["complaints_status"];
+          status: string;
           transaction_id: number;
         };
         Insert: {
@@ -127,7 +127,7 @@ export type Database = {
           complaints_id?: number;
           created_at?: string;
           seller_id: number;
-          status: Database["public"]["Enums"]["complaints_status"];
+          status: string;
           transaction_id: number;
         };
         Update: {
@@ -136,7 +136,7 @@ export type Database = {
           complaints_id?: number;
           created_at?: string;
           seller_id?: number;
-          status?: Database["public"]["Enums"]["complaints_status"];
+          status?: string;
           transaction_id?: number;
         };
         Relationships: [
@@ -165,6 +165,7 @@ export type Database = {
       };
       listings: {
         Row: {
+          bid_deadline: string | null;
           category: string | null;
           created_at: string;
           description: string;
@@ -177,6 +178,7 @@ export type Database = {
           type: string;
         };
         Insert: {
+          bid_deadline?: string | null;
           category?: string | null;
           created_at?: string;
           description: string;
@@ -189,6 +191,7 @@ export type Database = {
           type: string;
         };
         Update: {
+          bid_deadline?: string | null;
           category?: string | null;
           created_at?: string;
           description?: string;
@@ -292,6 +295,7 @@ export type Database = {
           item_id: number;
           rated: boolean | null;
           seller_id: number;
+          status: string;
           transaction_amount: number;
           transaction_id: number;
         };
@@ -302,6 +306,7 @@ export type Database = {
           item_id: number;
           rated?: boolean | null;
           seller_id: number;
+          status?: string;
           transaction_amount: number;
           transaction_id?: number;
         };
@@ -312,6 +317,7 @@ export type Database = {
           item_id?: number;
           rated?: boolean | null;
           seller_id?: number;
+          status?: string;
           transaction_amount?: number;
           transaction_id?: number;
         };
@@ -351,6 +357,7 @@ export type Database = {
           role: string;
           status: string;
           suspension_count: number | null;
+          termination_request: boolean | null;
           user_id: number;
           username: string;
           vip: boolean;
@@ -366,6 +373,7 @@ export type Database = {
           role?: string;
           status?: string;
           suspension_count?: number | null;
+          termination_request?: boolean | null;
           user_id?: number;
           username: string;
           vip: boolean;
@@ -381,6 +389,7 @@ export type Database = {
           role?: string;
           status?: string;
           suspension_count?: number | null;
+          termination_request?: boolean | null;
           user_id?: number;
           username?: string;
           vip?: boolean;

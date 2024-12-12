@@ -123,29 +123,39 @@ const updateUserStatus: RequestHandler = async (
   req: Request,
   res: Response
 ) => {
+  console.log("User Role:", req.user?.role);
   const { id } = req.params;
-  const { status } = req.body;
-
   if (!id) {
     res.status(400).json({ error: "Please provide a User ID" });
+    return;
+  }
+
+  if (req.user?.role !== "Admin") {
+    res.status(403).json({ error: "Forbidden: Super-user access required." });
     return;
   }
 
   try {
     const { data, error } = await supabase
       .from("users")
-      .update({ status })
+      .update({ status: "active" })
       .eq("user_id", id)
       .select();
 
-    if (error) throw error;
-    res.status(200).json(data);
-  } catch (e) {
-    if (e instanceof Error) {
-      res.status(500).json({ error: `${e.message}` });
-    } else if (typeof e === "object" && e !== null && "message" in e) {
-      res.status(500).json({ error: `${e.message}` });
+    console.log("Supabase Response Data:", data);
+    console.log("Supabase Response Error:", error);
+
+    if (error) {
+      res
+        .status(500)
+        .json({ error: `Database query failed: ${error.message}` });
+      return;
     }
+
+    res.status(200).json(data);
+  } catch (err) {
+    console.error("Unexpected Error in getPendingUsers:", err);
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -475,6 +485,76 @@ const rejectPendingUser: RequestHandler = async (req, res) => {
   }
 };
 
+// get pending complaints
+const getPendingComplaints: RequestHandler = async (req, res) => {
+  console.log("User Role:", req.user?.role);
+
+  if (req.user?.role !== "Admin") {
+    res.status(403).json({ error: "Forbidden: Super-user access required." });
+    return;
+  }
+
+  try {
+    const statusFilter = "pending"; // Explicitly define the filter
+    console.log("Executing query with filter: status =", statusFilter);
+
+    const { data, error } = await supabase
+      .from("complaints")
+      .select("*")
+      .filter("status::text", "eq", "pending"); // Force `status` to text
+
+    console.log("Supabase Response Data:", data);
+    console.log("Supabase Response Error:", error);
+
+    if (error) {
+      res
+        .status(500)
+        .json({ error: `Database query failed: ${error.message}` });
+      return;
+    }
+
+    res.status(200).json(data);
+  } catch (err) {
+    console.error("Unexpected Error in getPendingUsers:", err);
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+// get all suspended accounts
+const getSuspendedAccounts: RequestHandler = async (req, res) => {
+  console.log("User Role:", req.user?.role);
+
+  if (req.user?.role !== "Admin") {
+    res.status(403).json({ error: "Forbidden: Super-user access required." });
+    return;
+  }
+
+  try {
+    const statusFilter = "suspended"; // Explicitly define the filter
+    console.log("Executing query with filter: status =", statusFilter);
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .filter("status::text", "eq", "suspended"); // Force `status` to text
+
+    console.log("Supabase Response Data:", data);
+    console.log("Supabase Response Error:", error);
+
+    if (error) {
+      res
+        .status(500)
+        .json({ error: `Database query failed: ${error.message}` });
+      return;
+    }
+
+    res.status(200).json(data);
+  } catch (err) {
+    console.error("Unexpected Error in getPendingUsers:", err);
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
+
 export {
   getUser,
   updateUser,
@@ -487,4 +567,6 @@ export {
   getPendingUsers,
   approvePendingUser,
   rejectPendingUser,
+  getPendingComplaints,
+  getSuspendedAccounts,
 };
