@@ -233,7 +233,6 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
             status,
             type,
             category,
-            deadline: type === "auction" ? deadline : null,
             image: imageUrls,
             bid_deadline: type === "auction" ? deadline : null,
           },
