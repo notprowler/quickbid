@@ -13,6 +13,17 @@ router.post("/", validateAccessToken, SuspensionPolicy, listingsController.creat
 router.delete("/removeProduct/:id", validateAccessToken, SuspensionPolicy, listingsController.removeProduct);
 router.get("/profile/user", validateAccessToken, SuspensionPolicy, listingsController.getProfileListings);
 
+router.put(
+  "/:id/approve",
+  validateAccessToken,
+  listingsController.approveListing
+);
+router.put(
+  "/:id/reject",
+  validateAccessToken,
+  listingsController.rejectListing
+);
+
 // router.delete('/:id', )
 // router.patch('/:id', )
 

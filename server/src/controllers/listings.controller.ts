@@ -9,7 +9,11 @@ const getListings: RequestHandler = async (req: Request, res: Response) => {
   const { category, minPrice, maxPrice } = req.query;
 
   try {
-    let query = supabase.from("listings").select("*").neq("status", "sold");
+    let query = supabase
+      .from("listings")
+      .select("*")
+      .neq("status", "sold")
+      .neq("status", "pending");
 
     if (category && category !== "All") {
       query = query.eq("category", category);
@@ -242,10 +246,104 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
   });
 };
 
+const approveListing: RequestHandler = async (req, res) => {
+  const userId = req.user?.user_id; // Seller's ID
+  const { id: item_id } = req.params; // Listing ID
+
+  if (!userId || !item_id) {
+    res.status(400).json({ error: "Invalid User or Listing ID." });
+    return;
+  }
+
+  try {
+    // Fetch the pending transaction for the item
+    const { data: pendingTransaction, error: pendingError } = await supabase
+      .from("transactions")
+      .select("transaction_id, buyer_id, transaction_amount, discount_applied")
+      .eq("item_id", item_id)
+      .eq("status", "pending") // Ensure it's a pending transaction
+      .single();
+
+    if (pendingError || !pendingTransaction) {
+      throw new Error("Pending transaction not found.");
+    }
+
+    const { transaction_id, buyer_id, transaction_amount, discount_applied } =
+      pendingTransaction;
+
+    // Mark the transaction as completed
+    const { error: transactionUpdateError } = await supabase
+      .from("transactions")
+      .update({ status: "completed" })
+      .eq("transaction_id", transaction_id);
+
+    if (transactionUpdateError) {
+      throw transactionUpdateError;
+    }
+
+    // Mark the listing as sold
+    const { error: listingUpdateError } = await supabase
+      .from("listings")
+      .update({ status: "sold" })
+      .eq("item_id", item_id);
+
+    if (listingUpdateError) {
+      throw listingUpdateError;
+    }
+
+    res
+      .status(200)
+      .json({ message: "Listing approved and transaction completed." });
+  } catch (err) {
+    console.error("Error approving listing:", err);
+    res.status(500).json({ error: "Failed to approve listing." });
+  }
+};
+
+const rejectListing: RequestHandler = async (req, res) => {
+  const userId = req.user?.user_id; // Seller's ID
+  const { id: item_id } = req.params; // Listing ID
+
+  if (!userId || !item_id) {
+    res.status(400).json({ error: "Invalid User or Listing ID." });
+    return;
+  }
+
+  try {
+    // Delete the pending transaction
+    const { error: transactionDeleteError } = await supabase
+      .from("transactions")
+      .delete()
+      .eq("item_id", item_id)
+      .eq("status", "pending");
+
+    if (transactionDeleteError) {
+      throw transactionDeleteError;
+    }
+
+    // Reset the listing status to active
+    const { error: listingUpdateError } = await supabase
+      .from("listings")
+      .update({ status: "active" })
+      .eq("item_id", item_id);
+
+    if (listingUpdateError) {
+      throw listingUpdateError;
+    }
+
+    res.status(200).json({ message: "Listing rejected and reset to active." });
+  } catch (err) {
+    console.error("Error rejecting listing:", err);
+    res.status(500).json({ error: "Failed to reject listing." });
+  }
+};
+
 export default {
   getProductInformation,
   getListings,
   getProfileListings,
   createListing,
   removeProduct,
+  approveListing,
+  rejectListing,
 };
