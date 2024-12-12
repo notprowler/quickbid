@@ -19,7 +19,7 @@ interface Complaints {
 }
 
 interface SuspendedUser {
-  id: number;
+  user_id: number;
   username: string;
   email: string;
   address: string;
@@ -86,7 +86,6 @@ const AdminPanel = () => {
             withCredentials: true,
           },
         );
-
         setSuspendedUsers(response.data);
       } catch (err) {
         console.error("Error fetching suspended accounts:", err);
@@ -128,14 +127,16 @@ const AdminPanel = () => {
     }
   };
 
-  const handleUnsuspend = async (id: number) => {
+  const handleUnsuspend = async (user_id: number) => {
     try {
       await axios.put(
-        `http://localhost:3000/api/users/status/${id}`,
+        `http://localhost:3000/api/users/status/${user_id}`,
         {},
         { withCredentials: true },
       );
-      setSuspendedUsers((prev) => prev.filter((user) => user.id !== id));
+      setSuspendedUsers(
+        (prev) => prev.filter((user) => user.user_id !== user_id), // Use user_id here
+      );
     } catch (err) {
       console.error("Error unsuspending user:", err);
       setError("Failed to unsuspend user.");
@@ -261,7 +262,7 @@ const AdminPanel = () => {
           </thead>
           <tbody>
             {suspendedUsers.map((user) => (
-              <tr key={user.id}>
+              <tr key={user.user_id}>
                 <td className="border border-gray-300 px-4 py-2">
                   {user.username}
                 </td>
@@ -276,7 +277,10 @@ const AdminPanel = () => {
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
                   <button
-                    onClick={() => handleUnsuspend(user.id)}
+                    onClick={() => {
+                      console.log(user.user_id);
+                      handleUnsuspend(user.user_id);
+                    }}
                     className="mr-2 rounded bg-[#3A5B22] px-4 py-2 text-white hover:bg-[#2F4A1A]"
                   >
                     Unsuspend
