@@ -168,11 +168,11 @@ export function ProductBid({ productDetails }: { productDetails: Product }) {
           alert("Failed to place bid.");
         }
       } catch (error) {
+        //@ts-i
         console.error("Bid error:", error);
-        alert("Please login in order to place a bid.");
+        alert("Insufficient funds in your wallet. add more money!!");
       }
     } else {
-      alert("Your bid must be higher than the current bid.");
     }
   };
 
