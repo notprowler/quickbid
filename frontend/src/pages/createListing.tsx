@@ -10,6 +10,7 @@ const CreateListing: React.FC = () => {
   const [ownerId, setOwnerId] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
+  const [deadline, setDeadline] = useState("");
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,6 +21,10 @@ const CreateListing: React.FC = () => {
     formData.append("type", type);
     formData.append("price", price);
     formData.append("category", category);
+
+    if (type === "auction") {
+      formData.append("deadline", deadline);
+    }
 
     // formData.append('owner_id', ownerId); // Add a default owner_id for testing
 
@@ -116,6 +121,18 @@ const CreateListing: React.FC = () => {
             <option value="rent">Rent</option>
           </select>
         </div>
+        {type === "auction" && (
+          <div className="form-group">
+            <label className="mb-1 block font-semibold">Deadline:</label>
+            <input
+              type="datetime-local"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+              className="w-full rounded border border-gray-300 p-2"
+              required
+            />
+          </div>
+        )}
         <div className="form-group">
           <label className="mb-1 block font-semibold">Price:</label>
 
@@ -129,14 +146,23 @@ const CreateListing: React.FC = () => {
         </div>
         <div className="form-group">
           <label className="mb-1 block font-semibold">Category:</label>
-          <input
-            type="text"
+          <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className="w-full rounded border border-gray-300 p-2"
-
             required
-          />
+          >
+            <option value="All">All</option>
+            <option value="Clothes">Clothes</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Furniture">Furniture</option>
+            <option value="Vehicles">Vehicles</option>
+            <option value="Toys">Toys</option>
+            <option value="Home Goods">Home Goods</option>
+            <option value="Garden & Outdoor">Garden & Outdoor</option>
+            <option value="Musical Instruments">Musical Instruments</option>
+            <option value="Office Supplies">Office Supplies</option>
+          </select>
         </div>
         <div className="form-group">
           <label className="mb-1 block font-semibold">Images (up to 5):</label>
@@ -155,7 +181,7 @@ const CreateListing: React.FC = () => {
         </div>
         <button
           type="submit"
-          className="w-full rounded bg-blue-500 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+          className="w-full rounded bg-[#3A5B22] hover:bg-[#2F4A1A] px-4 py-2 font-semibold text-white "
         >
           Create Listing
         </button>
