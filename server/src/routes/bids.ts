@@ -1,6 +1,7 @@
 import express from 'express'
 import bidsController from '@/controllers/bids.Controller';
 import { validateAccessToken } from '@/util/JWT';
+import SuspensionPolicy from '@/middlewares/suspension';
 const router = express.Router();
 
 router.get('/:itemID', bidsController.retrieveAllBids);

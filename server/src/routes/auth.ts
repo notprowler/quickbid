@@ -12,6 +12,8 @@ router.post("/register", authController.registerUser);
 // @ts-ignore - Same here
 router.post("/login", authController.loginUser);
 
+router.post("/logout", authController.logOutUser);
+
 const verifyAccessToken = (
   token: string
 ): { valid: boolean; payload?: any } => {
@@ -30,7 +32,7 @@ router.get("/protected", validateAccessToken, (req, res) => {
   console.log("Accessing protected route. User:", req.user);
 
   if (!req.user) {
-    return res.status(403).json({ error: "User not authenticated" });
+    return res.status(401).json({ error: "User not authenticated" });
   }
 
   res.json({ message: "Protected data", user: req.user });
