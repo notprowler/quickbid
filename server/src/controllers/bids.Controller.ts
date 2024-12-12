@@ -92,6 +92,7 @@ const bidAccepted: RequestHandler = async (req: Request, res: Response) => {
         } else if (typeof e === 'object' && e !== null && 'message' in e) {
             res.status(500).json({ error: `${e.message}` });
         }
+
     }
   }
 };
@@ -236,6 +237,7 @@ const placeBid: RequestHandler = async (req: Request, res: Response) => {
       .select();
 
     if (bidError) throw bidError;
+
 
     res.status(200).json(bidData);
 

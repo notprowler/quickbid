@@ -196,11 +196,12 @@ const updateAverageRating: (userRatings: any) => Promise<void> = async (
       5 * userRatings.five_ratings) /
     R;
 
-  const updates: { average_rating: number; status?: string } = {
-    average_rating: parseFloat(sum.toFixed(1)),
-  };
 
-  if ((sum < 2.0 && R >= 3) || (sum > 4.0 && R >= 3)) {
+  const updates: { average_rating: number, status?: string } = {
+    average_rating: parseFloat(sum.toFixed(1)),
+  }
+
+  if ((sum < 2.00 && R >= 3) || (sum > 4.00 && R >= 3)) {
     updates.status = "suspended";
   }
 
@@ -581,6 +582,7 @@ const LiftUserSuspension: RequestHandler = async (
   req: Request,
   res: Response
 ) => {
+
   const userId = req.user?.user_id;
 
   if (!userId) {
@@ -594,12 +596,14 @@ const LiftUserSuspension: RequestHandler = async (
     res
       .status(400)
       .json({ error: "Please provide the ID of the suspended user" });
+
     return;
   }
 
   try {
     const { data, error } = await supabase
       .from("users")
+
       .update({ status: "active" })
       .eq("user_id", parseInt(id, 10))
       .select();
@@ -607,6 +611,7 @@ const LiftUserSuspension: RequestHandler = async (
     if (error) {
       throw error;
     }
+
 
     res.status(200).json(data);
   } catch (e) {
@@ -622,6 +627,7 @@ const AccountTerminationRequest: RequestHandler = async (
   req: Request,
   res: Response
 ) => {
+
   const userId = req.user?.user_id;
 
   if (!userId) {
@@ -639,6 +645,7 @@ const AccountTerminationRequest: RequestHandler = async (
   try {
     const { data, error } = await supabase
       .from("users")
+
       .update({ termination_request: true })
       .eq("user_id", parseInt(id, 10))
       .select();
@@ -646,6 +653,7 @@ const AccountTerminationRequest: RequestHandler = async (
     if (error) {
       throw error;
     }
+
 
     res.status(200).json(data);
   } catch (e) {
@@ -656,6 +664,7 @@ const AccountTerminationRequest: RequestHandler = async (
     }
   }
 };
+
 
 export {
   getUser,
@@ -673,4 +682,5 @@ export {
   LiftUserSuspension,
   getPendingComplaints,
   getSuspendedAccounts,
+
 };

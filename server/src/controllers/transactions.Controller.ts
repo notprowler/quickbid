@@ -219,6 +219,7 @@ const createTransaction: RequestHandler = async (req, res) => {
     // Check if we should promote the user to VIP status
     await promoteToVIP(buyer_id);
 
+
     // Update the listing to pending status
     const { error: listingUpdateError } = await supabase
       .from("listings")

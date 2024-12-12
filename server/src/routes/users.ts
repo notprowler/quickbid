@@ -16,6 +16,7 @@ import {
   getSuspendedAccounts,
   LiftUserSuspension,
   AccountTerminationRequest,
+
 } from "@/controllers/users.controller";
 import { validateAccessToken } from "@/util/JWT";
 import SuspensionPolicy from "@/middlewares/suspension";
@@ -81,5 +82,6 @@ router.get(
   validateAccessToken,
   getPendingComplaints
 );
+
 
 export default router;

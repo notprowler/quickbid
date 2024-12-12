@@ -235,6 +235,7 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
             category,
             deadline: type === "auction" ? deadline : null,
             image: imageUrls,
+            bid_deadline: type === "auction" ? deadline : null,
           },
         ])
         .select();
@@ -262,12 +263,14 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
           throw new Error(
             "Failed to retrieve item ID for the auction listing."
           );
+
         }
 
         const { error: bidError } = await supabase.from("bids").insert({
           item_id: item_id,
           bid_amount: price,
-          bid_deadline: "2024-12-11 15:30:45", // TODO: Using hardcoded value for now, need to give it value from frontend
+
+          bid_deadline: deadline,
           bid_status: "pending",
         });
 
