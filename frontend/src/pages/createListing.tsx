@@ -10,6 +10,7 @@ const CreateListing: React.FC = () => {
   const [ownerId, setOwnerId] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
+  const [deadline, setDeadline] = useState("");
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,6 +21,10 @@ const CreateListing: React.FC = () => {
     formData.append("type", type);
     formData.append("price", price);
     formData.append("category", category);
+
+    if (type === "auction") {
+      formData.append("deadline", deadline);
+    }
 
     // formData.append('owner_id', ownerId); // Add a default owner_id for testing
 
@@ -116,6 +121,18 @@ const CreateListing: React.FC = () => {
             <option value="rent">Rent</option>
           </select>
         </div>
+        {type === "auction" && (
+          <div className="form-group">
+            <label className="mb-1 block font-semibold">Deadline:</label>
+            <input
+              type="datetime-local"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+              className="w-full rounded border border-gray-300 p-2"
+              required
+            />
+          </div>
+        )}
         <div className="form-group">
           <label className="mb-1 block font-semibold">Price:</label>
 

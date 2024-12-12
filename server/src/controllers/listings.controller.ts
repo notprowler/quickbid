@@ -164,12 +164,9 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ error: err.message });
     }
 
-    // console.log('Request body:', req.body);
-    // console.log('Request files:', req.files);
-
     const owner_id = req.user?.user_id;
 
-    const { type, title, description, price, category } = req.body;
+    const { type, title, description, price, category, deadline } = req.body;
 
     if (!title || !description || !price || !owner_id || !type || !category) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -187,7 +184,6 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
         // Upload to Supabase storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("images")
-
           .upload(fileName, file.buffer, {
             contentType: file.mimetype,
             upsert: true,
@@ -231,6 +227,7 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
             type,
             category,
             image: imageUrls,
+            bid_deadline: type === "auction" ? deadline : null,
           },
         ])
         .select();
@@ -261,7 +258,7 @@ const createListing: RequestHandler = async (req: Request, res: Response) => {
         const { error: bidError } = await supabase.from("bids").insert({
           item_id: item_id,
           bid_amount: price,
-          bid_deadline: "2024-12-11 15:30:45", // TODO: Using hardcoded value for now, need to give it value from frontend
+          bid_deadline: deadline,
           bid_status: "pending",
         });
 

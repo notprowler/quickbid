@@ -14,6 +14,7 @@ interface Product {
   created_at: string;
   type: "sell" | "bid";
   owner_id: number;
+  bid_deadline?: string; // Added deadline property
 }
 
 // -------------------- Review Interface --------------------
@@ -191,6 +192,11 @@ export function ProductBid({ productDetails }: { productDetails: Product }) {
         <div className="text-4xl font-bold text-gray-800">
           Current Bid: ${currentBid}
         </div>
+        {productDetails?.bid_deadline && (
+          <div className="text-lg font-semibold text-gray-800">
+            Auction Deadline: {new Date(productDetails.bid_deadline).toLocaleString()}
+          </div>
+        )}
         <div className="flex space-x-4">
           <input
             type="number"
