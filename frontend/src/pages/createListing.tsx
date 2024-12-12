@@ -116,23 +116,13 @@ const CreateListing: React.FC = () => {
                 </div>
                 <div className="form-group">
                     <label className="block font-semibold mb-1">Category:</label>
-                    <select
+                    <input
+                        type="text"
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded"
                         required
-                    >
-                        <option value="All">All</option>
-                        <option value="Clothes">Clothes</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Furniture">Furniture</option>
-                        <option value="Vehicles">Vehicles</option>
-                        <option value="Toys">Toys</option>
-                        <option value="Home Goods">Home Goods</option>
-                        <option value="Garden & Outdoor">Garden & Outdoor</option>
-                        <option value="Musical Instruments">Musical Instruments</option>
-                        <option value="Office Supplies">Office Supplies</option>
-                    </select>
+                    />
                 </div>
                 <div className="form-group">
                     <label className="block font-semibold mb-1">Images (up to 5):</label>
