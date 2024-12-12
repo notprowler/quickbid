@@ -107,11 +107,13 @@ const bidRejected: RequestHandler = async (req: Request, res: Response) => {
 }
 
 // PRE: check if user has enough money he put for bid.
-// PRE: Give back the old Bidders money back to his account
+// PRE: Check if new bidder is same as old bidder and Give back the old Bidders money back to his account
+// if a user places another bid conserqutively. only deduct the difference from old bid from wallet.
 // 1. deduct money from users account. 
 // 2. Update the New Highest bidder and bid amount
-// 3. If the deadline is hit then the listings becomes deactivated and owners gets to decide wether to sell or not
-// 4. ??
+// 3. Update the listings table with the new bid - Need to do this because productpage is using that info. 
+// 4. If the deadline is hit then the listings becomes deactivated and owners gets to decide wether to sell or not
+
 const placeBid: RequestHandler = async (req: Request, res: Response) => {
     const { itemID } = req.params;
     const { bidValue } = req.body;
@@ -155,22 +157,24 @@ const placeBid: RequestHandler = async (req: Request, res: Response) => {
     if (previousBidData && previousBidData.bidder_id) {
         const { bidder_id: oldBidder, bid_amount: oldAmount } = previousBidData;
 
-        const { data: refundData, error: refundError } = await supabase
-        .from('users')
-        .select('balance')
-        .eq('user_id', oldBidder)
-        .single();
+        if (oldBidder !== bidderID) {
+            const { data: refundData, error: refundError } = await supabase
+                .from('users')
+                .select('balance')
+                .eq('user_id', oldBidder)
+                .single();
 
-        if (refundError) throw refundError;
+            if (refundError) throw refundError;
 
-        const newBalance = refundData.balance + oldAmount;
+            const newBalance = refundData.balance + oldAmount;
 
-        const { error: updateError } = await supabase
-        .from('users')
-        .update({ balance: newBalance })
-        .eq('user_id', oldBidder);
+            const { error: updateError } = await supabase
+                .from('users')
+                .update({ balance: newBalance })
+                .eq('user_id', oldBidder);
 
-        if (updateError) throw updateError;
+            if (updateError) throw updateError;
+        }
     }
 // ------------------------------------------------------------------------------------------------
         //1. Deduct money from users wallet
@@ -192,6 +196,18 @@ const placeBid: RequestHandler = async (req: Request, res: Response) => {
         if (bidError) throw bidError;
 
         res.status(200).json(bidData);
+
+// ------------------------------------------------------------------------------------------------
+
+        //3. Update the listings table with the new price 
+        const { data: update, error: error } = await supabase
+        .from('listings')
+        .update({ price: bidValue})
+        .eq('item_id', itemID)
+        .select();
+
+// ------------------------------------------------------------------------------------------------
+
     } catch (e) {
         if (e instanceof Error) {
             res.status(500).json({ error: `${e.message}` });
