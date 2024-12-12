@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Rating from "../components/Rate";
-import cutedog from '../assets/cutedog.jpg';
+import cutedog from "../assets/cutedog.jpg";
 import axios from "axios";
 
 interface Item {
@@ -53,7 +53,7 @@ const CartPage: React.FC = () => {
       imageUrl: cutedog,
       bidEndTime: new Date(Date.now() + 3600 * 1000).toISOString(),
       transactionType: "bid",
-      status: "active"
+      status: "active",
     },
     {
       item_id: 2,
@@ -64,7 +64,7 @@ const CartPage: React.FC = () => {
       imageUrl: cutedog,
       bidEndTime: new Date(Date.now() + 7200 * 1000).toISOString(),
       transactionType: "bid",
-      status: "active"
+      status: "active",
     },
     {
       item_id: 3,
@@ -72,11 +72,11 @@ const CartPage: React.FC = () => {
       price: 30,
       imageUrl: cutedog,
       transactionType: "sell",
-      status: "active"
+      status: "active",
     },
   ]);
 
-
+  const [error, setError] = useState<string | null>(null);
   const [timers, setTimers] = useState<{ [id: number]: string }>({});
   const [boughtItems, setBoughtItems] = useState<UserTransactions[]>([]);
   const [showBoughtItems, setShowBoughtItems] = useState<boolean>(false);
@@ -118,37 +118,58 @@ const CartPage: React.FC = () => {
   }, [items]);
 
   useEffect(() => {
-    const fetchData = async (): Promise<void> => {
+    const fetchBoughtItems = async (): Promise<void> => {
       try {
-        const res = await axios.get('http://localhost:3000/api/transactions/cart/user',
+        const res = await axios.get(
+          "http://localhost:3000/api/transactions/buyer/user",
           {
-            withCredentials: true
-          });
+            withCredentials: true,
+          },
+        );
 
         if (!res.data) {
-          throw new Error(`HTTP error! Status: ${res.status}`);
+          throw new Error("No data returned from the API.");
         }
 
+        console.log("Fetched Bought Items:", res.data);
         setBoughtItems(res.data);
-      } catch (e) {
-        if (e instanceof Error) {
-          console.error(`Error: ${e.message}`);
+      } catch (e: any) {
+        if (e.response) {
+          console.error("API Error:", e.response.data.error);
+          setError(e.response.data.error || "Unexpected API error occurred.");
+        } else if (e.request) {
+          console.error("No response from server:", e.request);
+          setError("Failed to connect to the server. Please try again later.");
         }
       }
     };
-    fetchData();
+
+    fetchBoughtItems();
   }, [refreshData]);
 
   const handleRatingCompleted = () => {
     setRefreshData((prev) => prev + 1);
   };
 
-
   const handleRemoveItem = (id: number) => {
     setItems((prevItems) => prevItems.filter((item) => item.item_id !== id));
   };
 
   const subtotal = items.reduce((acc, item) => acc + item.price, 0); // Simplified subtotal calculation
+
+  const purchasedItems = boughtItems.filter(
+    (item) =>
+      item.listings?.status === "sold" || item.listings?.status === "pending",
+  );
+
+  if (error) {
+    return (
+      <div className="mt-10 text-center">
+        <h1 className="text-2xl font-bold">Error</h1>
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative mx-auto max-w-7xl p-4">
@@ -241,51 +262,66 @@ const CartPage: React.FC = () => {
         <hr className="mb-4" />
 
         <div
-          className={`overflow-hidden transition-all duration-300 ease-in-out ${showBoughtItems ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
-            }`}
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            showBoughtItems ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
+          }`}
         >
-          {boughtItems.map((item) => (
+          {purchasedItems.map((item) => (
             <div
               key={item.transaction_id}
               className="relative mb-4 flex items-center gap-4 rounded-lg p-4 shadow-md"
             >
+              <span
+                className={`absolute right-4 top-2 rounded-full px-3 py-1 font-semibold ${
+                  item.listings?.status === "sold"
+                    ? "bg-red-500 text-white"
+                    : "bg-yellow-500 text-black"
+                }`}
+              >
+                {item.listings?.status.toUpperCase()}
+              </span>
               <img
-                src={item.listings.image}
-                alt={item.listings.title}
+                src={item.listings?.image || "placeholder.jpg"}
+                alt={item.listings?.title || "No Title"}
                 className="h-32 w-32 rounded-lg object-cover"
               />
               <div className="flex-1">
-                <h3 className="text-2xl font-bold"></h3>
+                <h3 className="text-2xl font-bold">
+                  {item.listings?.title || "No Title"}
+                </h3>
                 <p className="mb-2 text-lg text-gray-700">
-                  Price: ${item.transaction_amount}
+                  Price: ${item.transaction_amount.toFixed(2)}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Date Purchased: {item.created_at.toString().split("T")[0]}
+                  Date Purchased:{" "}
+                  {new Date(item.created_at).toLocaleDateString()}
                 </p>
                 <hr className="my-2" />
-                <button
-                  className="rounded-full px-1 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
-                  onClick={() => navigate(`/item/${item.item_id}`)}
-                >
-                  View Item
-                </button>
-                {
-                  !item.rated &&
+                <div className="flex gap-2">
                   <button
-                    className="rounded-full px-4 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
-                    onClick={() => {
-                      setShowRate(true);
-                      setSelectedItem(item);
-                    }}
+                    className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+                    onClick={() => navigate(`/item/${item.item_id}`)}
                   >
-                    Rate Purchase
+                    View
                   </button>
-                }
+                  {!item.rated && item.listings?.status !== "pending" && (
+                    <button
+                      className="rounded-full px-4 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+                      onClick={() => {
+                        setShowRate(true);
+                        setSelectedItem(item);
+                      }}
+                    >
+                      Rate Purchase
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
         </div>
       </div>
+
       {showRate && selectedItem && (
         <Rating
           sellerID={selectedItem?.listings.owner_id}

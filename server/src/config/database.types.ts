@@ -167,6 +167,7 @@ export type Database = {
         Row: {
           bid_deadline: string | null;
           category: string | null;
+          comments: string[] | null;
           created_at: string;
           description: string;
           image: string[] | null;
@@ -180,6 +181,7 @@ export type Database = {
         Insert: {
           bid_deadline?: string | null;
           category?: string | null;
+          comments?: string[] | null;
           created_at?: string;
           description: string;
           image?: string[] | null;
@@ -193,6 +195,7 @@ export type Database = {
         Update: {
           bid_deadline?: string | null;
           category?: string | null;
+          comments?: string[] | null;
           created_at?: string;
           description?: string;
           image?: string[] | null;

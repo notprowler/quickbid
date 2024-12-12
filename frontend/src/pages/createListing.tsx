@@ -12,6 +12,7 @@ const CreateListing: React.FC = () => {
   const [images, setImages] = useState<File[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData();
@@ -68,6 +69,7 @@ const CreateListing: React.FC = () => {
     }
   };
 
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       // Convert FileList to Array and limit to 5 images
@@ -81,6 +83,7 @@ const CreateListing: React.FC = () => {
       <h1 className="mb-4 text-2xl font-bold">Create Listing</h1>
       {successMessage && (
         <div className="mb-4 rounded bg-green-500 p-2 text-white">
+
           {successMessage}
         </div>
       )}
@@ -101,6 +104,7 @@ const CreateListing: React.FC = () => {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full rounded border border-gray-300 p-2"
+
             required
           />
         </div>
@@ -110,6 +114,7 @@ const CreateListing: React.FC = () => {
             value={type}
             onChange={(e) => setType(e.target.value)}
             className="w-full rounded border border-gray-300 p-2"
+
             required
           >
             <option value="sell">Sell</option>
@@ -119,6 +124,7 @@ const CreateListing: React.FC = () => {
         </div>
         <div className="form-group">
           <label className="mb-1 block font-semibold">Price:</label>
+
           <input
             type="number"
             value={price}
@@ -134,6 +140,7 @@ const CreateListing: React.FC = () => {
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className="w-full rounded border border-gray-300 p-2"
+
             required
           />
         </div>

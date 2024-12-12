@@ -78,15 +78,20 @@ export function ProductSell({
         { withCredentials: true },
       );
 
-      if (response.status === 201) {
-        alert("Purchase successful!");
+      if (response.status === 200 || response.status === 204) {
+        alert(
+          "Successfully placed order. The seller will either approve or deny your order. Check your profile for the latest updates on this order.",
+        );
       } else {
         alert("Purchase failed.");
       }
-    } catch (error) {
-      console.error("Purchase error:", error);
-      alert("Please login in order to purchase items.");
-      navigate("/login");
+    } catch (e: any) {
+      if (e.response) {
+        console.error("API Error:", e.response.data.error);
+        alert("Please be a active user to purchase this product");
+      } else if (e.request) {
+        console.error("No response from server:", e.request);
+      }
     }
   };
 
@@ -106,19 +111,26 @@ export function ProductSell({
         <div className="text-4xl font-bold text-gray-800">
           ${productDetails?.price}
         </div>
-        {productDetails?.status != "active" ? (
+        {productDetails?.status === "pending" ? (
           <button
-            disabled={true}
-            className="duration:200 rounded-lg bg-rose-800 px-4 py-2 text-white transition ease-in-out hover:bg-rose-700"
+            disabled
+            className="duration:200 cursor-not-allowed rounded-lg bg-yellow-500 px-4 py-2 text-white transition ease-in-out"
           >
-            Sold
+            Pending Approval
           </button>
-        ) : (
+        ) : productDetails?.status === "active" ? (
           <button
             onClick={handlePurchase}
             className="duration:200 rounded-lg bg-[#3A5B22] px-4 py-2 text-white transition ease-in-out hover:bg-[#2F4A1A]"
           >
             Buy Now
+          </button>
+        ) : (
+          <button
+            disabled
+            className="duration:200 cursor-not-allowed rounded-lg bg-rose-800 px-4 py-2 text-white transition ease-in-out"
+          >
+            Sold
           </button>
         )}
         <details className="rounded-lg border border-gray-300 p-4">
@@ -137,12 +149,27 @@ export function ProductBid({ productDetails }: { productDetails: Product }) {
   const [currentBid, setCurrentBid] = useState(productDetails.price);
   const [newBid, setNewBid] = useState("");
 
-  const handleBid = () => {
+  const handleBid = async () => {
     const bidValue = parseFloat(newBid);
     if (bidValue > currentBid) {
-      setCurrentBid(bidValue);
-      alert(`Your bid of $${bidValue} has been placed!`);
-      setNewBid("");
+      try {
+        const response = await axios.post(
+          `http://localhost:3000/api/bids/place/${productDetails.item_id}`,
+          { bidValue },
+          { withCredentials: true }
+        );
+
+        if (response.status === 200) {
+          setCurrentBid(bidValue);
+          alert(`Your bid of $${bidValue} has been placed!`);
+          setNewBid("");
+        } else {
+          alert("Failed to place bid.");
+        }
+      } catch (error) {
+        console.error("Bid error:", error);
+        alert("Please login in order to place a bid.");
+      }
     } else {
       alert("Your bid must be higher than the current bid.");
     }
