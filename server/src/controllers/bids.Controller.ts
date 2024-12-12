@@ -68,8 +68,8 @@ const rejectAllBids: (itemID: string, bidID: number) => Promise<void> = async (i
 };
 
 const bidAccepted: RequestHandler = async (req: Request, res: Response) => {
-    const {itemID} = req.params;
-    const {bidderID, bidValue} = req.body;
+    const { itemID } = req.params;
+    const { bidderID, bidValue } = req.body;
 
     if (!itemID) {
         res.status(400).json({ error: 'Item ID is required' });
@@ -84,13 +84,13 @@ const bidAccepted: RequestHandler = async (req: Request, res: Response) => {
             .eq('bidder_id', bidderID)
             .eq('bid_amount', bidValue)
             .select();
-        
+
         if (error) throw error;
 
         if (!data || !data[0]) {
-            res.status(500).json({error: 'Error updating row'});
+            res.status(500).json({ error: 'Error updating row' });
             return;
-        } 
+        }
 
         rejectAllBids(itemID, data[0].bid_id)
         res.status(200).json(data);
@@ -105,7 +105,7 @@ const bidAccepted: RequestHandler = async (req: Request, res: Response) => {
 
 const bidRejected: RequestHandler = async (req: Request, res: Response) => {
     const { itemID } = req.params;
-    const {bidderID, bidValue} = req.body;
+    const { bidderID, bidValue } = req.body;
 
     if (!itemID) {
         res.status(400).json({ error: 'Item ID is required' });
@@ -120,10 +120,10 @@ const bidRejected: RequestHandler = async (req: Request, res: Response) => {
             .eq('bidder_id', bidderID)
             .eq('bid_amount', bidValue)
             .select();
-        
+
         if (error) throw error;
         res.status(200).json(data);
-    } catch(e) {
+    } catch (e) {
         if (e instanceof Error) {
             res.status(500).json({ error: `${e.message}` });
         } else if (typeof e === 'object' && e !== null && 'message' in e) {

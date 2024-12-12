@@ -48,9 +48,10 @@ const validateAccessToken = (
       res.status(400).json({ error: "Invalid token format" });
       return;
     }
+
   } catch (err) {
     console.error("JWT Verification Error:", err);
-    res.status(403).json({ error: "Invalid or expired token" });
+    res.status(401).json({ error: "Invalid or expired token" });
   }
 };
 
@@ -67,9 +68,8 @@ const checkUserExistence = async (username: string, email: string) => {
     .eq("email", email);
 
   if (usernameError || emailError) {
-    return `Error while checking the database: ${
-      usernameError?.message || emailError?.message
-    }`;
+    return `Error while checking the database: ${usernameError?.message || emailError?.message
+      }`;
   }
 
   if (usernameData.length > 0) {

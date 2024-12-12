@@ -12,6 +12,7 @@ interface UserData {
   vip: boolean;
   balance: number;
   average_rating: number;
+  termination_request: boolean;
 }
 
 interface UserListings {
@@ -46,8 +47,7 @@ export default function ProfilePage() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [userListings, setUserListings] = useState<UserListings[]>([]);
   const [showListings, setShowListings] = useState(false);
-  const [userTransactions, setUserTransactions] = useState<
-    UserTransactions[] | null
+  const [userTransactions, setUserTransactions] = useState<UserTransactions[] | null
   >(null);
   const [showSoldProducts, setShowSoldProducts] = useState(false);
 
@@ -59,6 +59,9 @@ export default function ProfilePage() {
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
+
+  const [isTerminationModalOpen, setIsTerminationModalOpen] = useState(false);
+  const [showGoodbyeMessage, setShowGoodbyeMessage] = useState(false);
 
   const handleOpenAddFunds = async (amount: number) => {
     try {
@@ -97,6 +100,7 @@ export default function ProfilePage() {
       vip: res.data.vip || false,
       balance: res.data.balance || 0,
       average_rating: res.data.average_rating || 0,
+      termination_request: res.data.termination_request || false,
     });
   }
 
@@ -135,9 +139,13 @@ export default function ProfilePage() {
         await fetchUserData();
         await fetchListingData();
         await fetchTransactionData();
-      } catch (e) {
-        if (e instanceof Error) {
-          setError("You caught us lacking");
+      } catch (e: any) {
+        if (e.response) {
+          console.error("API Error:", e.response.data.error);
+          setError(e.response.data.error || "Unexpected API error occurred.");
+        } else if (e.request) {
+          console.error("No response from server:", e.request);
+          setError("Failed to connect to the server. Please try again later.");
         }
       }
     };
@@ -166,6 +174,21 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleTerminationRequest(): Promise<void> {
+    try {
+      const res = await axios.post(
+        `http://localhost:3000/api/users/termination/${userData?.user_id}`, {},
+        { withCredentials: true },
+      );
+
+      if (!res.data) { throw error; }
+    } catch (e) {
+      if (e instanceof Error) {
+        console.error(`${e.message}`);
+      }
+    }
+  }
+
   if (error) {
     return (
       <div className="mt-10 text-center">
@@ -188,7 +211,7 @@ export default function ProfilePage() {
       <h1 className="mb-4 text-3xl font-bold">Welcome, {userData.username}</h1>
 
       {/* User Information Card */}
-      <div className="mb-6 flex items-center gap-4 rounded-lg px-8 py-4 shadow-md">
+      <div className="mb-6 flex items-center gap-4 rounded-lg px-6 py-4 shadow-md">
         <div className="flex h-36 w-36 items-center justify-center rounded-full bg-gray-200">
           <FaUser className="text-6xl text-gray-500" />
         </div>
@@ -197,9 +220,8 @@ export default function ProfilePage() {
             <h2 className="text-2xl font-bold">{userData.username}</h2>
             <p className="text-xl text-gray-600">{userData.email}</p>
             <span
-              className={`mt-2 inline-block rounded-full px-3 py-1 text-white ${
-                userData.vip ? "bg-[#246fb6]" : "bg-gray-400"
-              }`}
+              className={`mt-2 inline-block rounded-full px-3 py-1 text-white ${userData.vip ? "bg-[#246fb6]" : "bg-gray-400"
+                }`}
             >
               {userData.vip ? "VIP Member 🏆" : "Regular User"}
             </span>
@@ -214,16 +236,22 @@ export default function ProfilePage() {
             <div>
               <p className="text-sm font-semibold">Rating</p>
               <p className="text-xl font-bold">
-                {userData.average_rating.toFixed(2)}
+                {userData?.average_rating.toFixed(2)}
               </p>
             </div>
           </div>
-          <div className="space-x-20">
+          <div className="space-x-60">
             <button
               onClick={() => handleOpenAddFunds(50)}
               className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition hover:bg-slate-200"
             >
               Add Funds
+            </button>
+            <button
+              onClick={() => setIsTerminationModalOpen(true)}
+              className="mt-4 rounded-full px-4 py-2 font-semibold text-red-500 transition hover:bg-slate-200"
+            >
+              Terminate Account
             </button>
           </div>
         </div>
@@ -243,9 +271,8 @@ export default function ProfilePage() {
 
       <hr className="mb-4" />
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          showListings ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${showListings ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
+          }`}
       >
         {userListings
           .filter((item) => item.status === "active")
@@ -297,9 +324,8 @@ export default function ProfilePage() {
       <hr className="mb-4" />
 
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          showSoldProducts ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${showSoldProducts ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
+          }`}
       >
         {userTransactions?.map((item) => (
           <div
@@ -365,6 +391,49 @@ export default function ProfilePage() {
           toggleRateForm={setShowRate}
           onRatingCompleted={handleRatingCompleted} // Pass callback
         />
+      )}
+
+
+      {isTerminationModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+            <h2 className="mb-4 text-2xl font-bold text-center">
+              Confirm Account Termination
+            </h2>
+            <p className="mb-6 text-center text-gray-600">
+              Are you sure you want to terminate your account? This action is irreversible.
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setIsTerminationModalOpen(false)}
+                className="rounded-full px-6 py-2 text-gray-500 border border-gray-500 transition hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  handleTerminationRequest();
+                  setIsTerminationModalOpen(false);
+                  setShowGoodbyeMessage(true);
+                  setTimeout(() => setShowGoodbyeMessage(false), 3000);
+                }}
+                className="rounded-full px-6 py-2 text-white bg-red-400 transition hover:bg-red-600"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showGoodbyeMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg text-center">
+            <h2 className="text-2xl font-bold text-gray-800">
+              We have submitted your request! We are sorry to see you leave us...
+            </h2>
+          </div>
+        </div>
       )}
 
       <AddFunds

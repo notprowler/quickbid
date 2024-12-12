@@ -4,10 +4,13 @@ import {
   FaTimes,
   FaBars,
   FaPlus,
+
 } from "react-icons/fa";
+import { IoLogOut } from "react-icons/io5";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import axios from "axios";
 
 export default function Navbar() {
   const [cartCount, setCartCount] = useState<number>(0);
@@ -44,6 +47,24 @@ export default function Navbar() {
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
+
+  const handleLogoutClick = async (): Promise<void> => {
+    try {
+      const res = await axios.post(
+        "http://localhost:3000/auth/logout", {},
+        { withCredentials: true },
+      );
+
+      if (!res.data) { throw new Error; }
+
+      navigate("/");
+      window.location.reload();
+    } catch (e) {
+      if (e instanceof Error) {
+        console.error(`${e.message}`);
+      }
+    }
+  }
 
   return (
     <nav className="flex items-center justify-between border-b-2 border-solid px-6 py-4 font-imprima">
@@ -135,7 +156,18 @@ export default function Navbar() {
           ) : (
             <FaUser className="text-2xl" />
           )}
+
         </button>
+        {
+          authenticated &&
+          <button
+            onClick={handleLogoutClick}
+            className="flex h-10 w-10 items-center justify-center rounded-full transition duration-200 ease-in-out hover:-translate-y-1"
+            aria-label="Logout"
+          >
+            <IoLogOut className="text-3xl" />
+          </button>
+        }
       </div>
     </nav>
   );
