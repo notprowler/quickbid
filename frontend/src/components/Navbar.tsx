@@ -165,7 +165,7 @@ export default function Navbar() {
             className="flex h-10 w-10 items-center justify-center rounded-full transition duration-200 ease-in-out hover:-translate-y-1"
             aria-label="Logout"
           >
-            <IoLogOut className="text-3xl" />
+            <IoLogOut className="text-2xl" />
           </button>
         }
       </div>
