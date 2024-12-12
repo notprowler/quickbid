@@ -1,29 +1,18 @@
 import { useState, useEffect } from "react";
-import EditProfile from "../components/EditProfile";
 import AddFunds from "../components/AddFunds";
 import Rating from "../components/Rate";
 import axios from "axios";
-import TestImage from "../assets/cutedog.jpg";
+import { FaUser } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 interface UserData {
   user_id: number;
-  created_at: Date;
   username: string;
   email: string;
-  address: string;
-  password_hash: string;
   vip: boolean;
   balance: number;
-  profilePicture?: string; // Optional
-  status: string;
-  role: string;
   average_rating: number;
-  listings: {
-    id: number;
-    title: string;
-    price: number;
-    sold: boolean;
-  }[];
+  termination_request: boolean;
 }
 
 interface UserListings {
@@ -47,19 +36,15 @@ interface UserTransactions {
   transaction_amount: number;
   discount_applied: boolean;
   listings: UserListings;
+  rated: boolean;
 }
 
 export default function ProfilePage() {
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
   const [error, setError] = useState<string | null>(null);
 
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-  const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
-
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-
-  /* user info, listings, and transactions state */
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [userListings, setUserListings] = useState<UserListings[]>([]);
   const [showListings, setShowListings] = useState(false);
   const [userTransactions, setUserTransactions] = useState<
@@ -67,61 +52,27 @@ export default function ProfilePage() {
   >(null);
   const [showSoldProducts, setShowSoldProducts] = useState(false);
 
-  /* rate buyer form state */
+  const [buyerTransactions, setBuyerTransactions] = useState<
+    UserTransactions[] | null
+  >(null);
+
   const [showRate, setShowRate] = useState<boolean>(false);
-  const [selectedItem, setSelectedItem] = useState<UserListings | null>(null);
+  const [selectedItem, setSelectedItem] = useState<UserTransactions | null>(
+    null,
+  );
+  const [refreshData, setRefreshData] = useState<number>(0); // State to track refresh
 
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
 
-  // Fetch user profile data
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await axios.get("/api/users/profile", {
-          withCredentials: true,
-          validateStatus: (status) => status < 500,
-        });
+  const [isTerminationModalOpen, setIsTerminationModalOpen] = useState(false);
+  const [showGoodbyeMessage, setShowGoodbyeMessage] = useState(false);
 
-        console.log("Backend Response Data:", response.data);
-
-        if (response.status === 200 || response.status === 304) {
-          setUserData({
-            user_id: response.data.user_id || 0,
-            username: response.data.username || "Guest",
-            email: response.data.email || "No Email",
-            profilePicture: response.data.profilePicture || TestImage,
-            vip: response.data.vip || false,
-            balance: response.data.balance || 0,
-            average_rating: response.data.average_rating || 0,
-            listings: response.data.listings || [],
-          });
-          console.log("User Data State Set:", userData);
-        } else {
-          setError("Failed to load profile data.");
-          console.error("API Error Response:", response);
-        }
-      } catch (err) {
-        console.error("Error fetching profile data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
-  // Update profile data after editing
-  const handleProfileUpdate = (updatedData: Partial<UserData>) => {
-    setUserData((prevData) =>
-      prevData ? { ...prevData, ...updatedData } : null,
-    );
-  };
-
-  // Handle Stripe payment intent creation
   const handleOpenAddFunds = async (amount: number) => {
     try {
       const response = await axios.post(
-        "http://localhost:4000/create-payment-intent",
-        { amount: amount * 100 }, // Amount in cents
+        "http://localhost:3000/api/payments/create-payment-intent",
+        { amount: amount * 100 },
         { withCredentials: true },
       );
 
@@ -132,47 +83,201 @@ export default function ProfilePage() {
     }
   };
 
-// <<<<<<< feature/transactions_rating
-
-//   async function fetchUserData(): Promise<void> {
-//     const res = await fetch("http://localhost:3000/api/users/104");
-//     if (!res.ok) {
-//       throw new Error(`No data returned for user. HTTP Status: ${res.status}`);
-//     }
-
-//     const user = await res.json();
-
-//     setUserData(user);
-//   }
-
-//   async function fetchListingData(): Promise<void> {
-//     const res = await fetch("http://localhost:3000/api/listings/104");
-
-//     if (!res.ok) {
-//       throw new Error(
-//         `No listings returned for user. HTTP Status: ${res.status}`,
-//       );
-//     }
-
-//     const listings = await res.json();
-
-//     setUserListings(listings);
-//   }
-
-//   async function fetchTransactionData(): Promise<void> {
-//     const res = await fetch(
-//       "http://localhost:3000/api/transactions/seller/104",
-// =======
-  // Handle successful payment
   const handlePaymentSuccess = (amount: number) => {
     setUserData((prevData) =>
       prevData ? { ...prevData, balance: prevData.balance + amount } : null,
     );
-    console.log("Added funds:", amount);
   };
 
-  if (loading) {
-    return <div>Loading profile...</div>;
+  async function fetchUserData(): Promise<void> {
+    try {
+      console.log("Fetching user data...");
+      const res = await axios.get("http://localhost:3000/api/users/profile", {
+        withCredentials: true,
+      });
+
+      if (!res.data) {
+        throw new Error(`No user data returned. HTTP Status: ${res.status}`);
+      }
+
+      setUserData({
+        user_id: res.data.user_id || 0,
+        username: res.data.username || "Guest",
+        email: res.data.email || "No Email",
+        vip: res.data.vip || false,
+        balance: res.data.balance || 0,
+        average_rating: res.data.average_rating || 0,
+        termination_request: res.data.termination_request || false,
+      });
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      throw error;
+    }
+  }
+
+  async function fetchListingData(): Promise<void> {
+    try {
+      const res = await axios.get(
+        "http://localhost:3000/api/listings/profile/user",
+        { withCredentials: true },
+      );
+
+      if (!res.data) {
+        throw new Error(
+          `No listings returned for user. HTTP Status: ${res.status}`,
+        );
+      }
+      setUserListings(res.data);
+    } catch (error) {
+      console.error("Error fetching listings data:", error);
+      setError("Failed to fetch listings data");
+    }
+  }
+
+  async function fetchTransactionData(): Promise<void> {
+    try {
+      const res = await axios.get(
+        "http://localhost:3000/api/transactions/profile/user",
+        { withCredentials: true },
+      );
+
+      if (!res.data) {
+        throw new Error(
+          `No transactions returned for user. HTTP Status: ${res.status}`,
+        );
+      }
+
+      setUserTransactions(res.data);
+    } catch (error) {
+      console.error("Error fetching transaction data:", error);
+      setError("Failed to fetch transaction data");
+    }
+  }
+
+  async function fetchBuyerTransactions(): Promise<void> {
+    try {
+      console.log("Fetching buyer transactions...");
+      const res = await axios.get(
+        "http://localhost:3000/api/transactions/buyer/user",
+        { withCredentials: true },
+      );
+
+      if (!res.data) {
+        throw new Error(`No transactions returned. HTTP Status: ${res.status}`);
+      }
+
+      setBuyerTransactions(res.data);
+      console.log("Buyer transactions fetched successfully");
+    } catch (error) {
+      console.error("Error fetching buyer transactions:", error);
+      throw error;
+    }
+  }
+
+  async function handleApproveListing(itemId: number): Promise<void> {
+    try {
+      const response = await axios.put(
+        `http://localhost:3000/api/listings/${itemId}/approve`,
+        {},
+        { withCredentials: true },
+      );
+
+      if (response.status === 200) {
+        alert("Listing approved successfully!");
+        setRefreshData((prev) => prev + 1);
+      } else {
+        throw new Error(`Approval failed with status ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error approving listing:", error);
+      alert("Failed to approve listing.");
+    }
+  }
+
+  async function handleRejectListing(itemId: number): Promise<void> {
+    try {
+      const response = await axios.put(
+        `http://localhost:3000/api/listings/${itemId}/reject`,
+        {},
+        { withCredentials: true },
+      );
+
+      if (response.status === 200) {
+        alert("Listing rejected successfully!");
+        setRefreshData((prev) => prev + 1);
+      } else {
+        throw new Error(`Rejection failed with status ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error rejecting listing:", error);
+      alert("Failed to reject listing.");
+    }
+  }
+
+  useEffect(() => {
+    const fetchData = async (): Promise<void> => {
+      try {
+        console.log("Starting data fetch...");
+        await fetchUserData();
+        console.log("User data fetched successfully");
+        await fetchListingData();
+        console.log("Listing data fetched successfully");
+        await fetchTransactionData();
+        console.log("Transaction data fetched successfully");
+        await fetchBuyerTransactions();
+        console.log("Buyer transactions fetched successfully");
+      } catch (e: any) {
+        if (e.response) {
+          console.error("API Error:", e.response.data.error);
+          setError(e.response.data.error || "Unexpected API error occurred.");
+        } else if (e.request) {
+          console.error("No response from server:", e.request);
+          setError("Failed to connect to the server. Please try again later.");
+        }
+      }
+    };
+
+    fetchData();
+  }, [refreshData]);
+
+  const handleRatingCompleted = () => {
+    setRefreshData((prev) => prev + 1); // Increment refreshData to trigger re-render
+  };
+
+  async function handleRemoveListing(
+    discardProduct: UserListings,
+  ): Promise<void> {
+    try {
+      await axios.delete(
+        "http://localhost:3000/api/listings/removeProduct/${discardProduct.item_id}",
+        { withCredentials: true },
+      );
+      setUserListings(
+        userListings.filter((item) => item.item_id !== discardProduct.item_id),
+      );
+    } catch (e) {
+      if (e instanceof Error) {
+        setError("You caught us lacking");
+      }
+    }
+  }
+
+  async function handleTerminationRequest(): Promise<void> {
+    try {
+      const res = await axios.post(
+        `http://localhost:3000/api/users/termination/${userData?.user_id}`,
+        {},
+        { withCredentials: true },
+      );
+
+      if (!res.data) {
+        throw error;
+      }
+    } catch (e) {
+      if (e instanceof Error) {
+        console.error(`${e.message}`);
+      }
+    }
   }
 
   if (error) {
@@ -187,60 +292,30 @@ export default function ProfilePage() {
   if (!userData) {
     return (
       <div className="mt-10 text-center">
-        <h1 className="text-2xl font-bold">Access Denied</h1>
-        <p>Please log in to view your profile.</p>
+        <h1 className="text-2xl font-bold">Fetching Your Data...</h1>
       </div>
-
     );
-
-    if (!res.ok) {
-      throw new Error(
-        `No transactions returned for user. HTTP Status: ${res.status}`,
-      );
-    }
-
-    const transactions = await res.json();
-    console.log(transactions);
-    setUserTransactions(transactions);
   }
-
-  useEffect(() => {
-    const fetchData = async (): Promise<void> => {
-      try {
-        await fetchUserData();
-        await fetchListingData();
-        fetchTransactionData();
-      } catch (e) {
-        if (e instanceof Error) {
-          console.error(`error: ${e.message}`);
-        }
-      }
-    };
-    fetchData();
-  }, []);
 
   return (
     <div className="mx-auto max-w-3xl p-4 font-imprima">
-      <h1 className="mb-4 text-3xl font-bold">Welcome, {userData?.username}</h1>
+      <h1 className="mb-4 text-3xl font-bold">Welcome, {userData.username}</h1>
 
       {/* User Information Card */}
-      <div className="mb-6 flex items-center gap-4 rounded-lg px-8 py-4 shadow-md">
-        <img
-          src={userData.profilePicture || TestImage}
-          alt="User Avatar"
-          className="h-36 w-36 rounded-full object-cover"
-        />
+      <div className="mb-6 flex items-center gap-4 rounded-lg px-6 py-4 shadow-md">
+        <div className="flex h-36 w-36 items-center justify-center rounded-full bg-gray-200">
+          <FaUser className="text-6xl text-gray-500" />
+        </div>
         <div>
-
           <div className="px-4">
-            <h2 className="text-2xl font-bold">{userData?.username}</h2>
-            <p className="text-xl text-gray-600">{userData?.email}</p>
+            <h2 className="text-2xl font-bold">{userData.username}</h2>
+            <p className="text-xl text-gray-600">{userData.email}</p>
             <span
               className={`mt-2 inline-block rounded-full px-3 py-1 text-white ${
-                userData?.vip ? "bg-[#246fb6]" : "bg-gray-400"
+                userData.vip ? "bg-[#246fb6]" : "bg-gray-400"
               }`}
             >
-              {userData?.vip ? "VIP Member 🏆" : "Regular User"}
+              {userData.vip ? "VIP Member 🏆" : "Regular User"}
             </span>
           </div>
           <div className="mt-4 flex gap-12 px-4">
@@ -252,40 +327,36 @@ export default function ProfilePage() {
             </div>
             <div>
               <p className="text-sm font-semibold">Rating</p>
-              <p className="text-xl font-bold">{userData?.average_rating}</p>
+              <p className="text-xl font-bold">
+                {userData?.average_rating.toFixed(2)}
+              </p>
             </div>
-            {/* <div>
-              <p className="text-sm font-semibold">Reviews</p>
-              <p className="text-xl font-bold">{userData.ratings.count}</p>
-            </div> */}
           </div>
-
-          <div className="space-x-20">
+          <div className="space-x-60">
             <button
-              onClick={() => setIsEditProfileOpen(true)}
-              className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition hover:bg-slate-200"
-            >
-              Edit Profile
-            </button>
-
-            <button
-              onClick={() => handleOpenAddFunds(50)} // Example amount
+              onClick={() => handleOpenAddFunds(50)}
               className="mt-4 rounded-full px-4 py-2 font-semibold text-[#246fb6] transition hover:bg-slate-200"
             >
               Add Funds
+            </button>
+            <button
+              onClick={() => setIsTerminationModalOpen(true)}
+              className="mt-4 rounded-full px-4 py-2 font-semibold text-red-500 transition hover:bg-slate-200"
+            >
+              Terminate Account
             </button>
           </div>
         </div>
       </div>
 
-      {/* Listings */}
       <div className="mb-2">
         <button
           onClick={() => setShowListings(!showListings)}
           className="w-full px-4 py-2 text-left"
         >
-          <span className="text-2xl font-bold">
+          <span className="flex justify-between text-2xl font-bold">
             {showListings ? "Hide Listings" : "View Listings"}
+            <span className="text-xl">{showListings ? "▲" : "▼"}</span>
           </span>
         </button>
       </div>
@@ -297,12 +368,23 @@ export default function ProfilePage() {
         }`}
       >
         {userListings
-          .filter((item) => item.status == "active")
+          .filter(
+            (item) => item.status === "active" || item.status === "pending",
+          )
           .map((item) => (
             <div
               key={item.item_id}
               className="relative mb-4 flex items-center gap-4 rounded-lg p-4 shadow-md"
             >
+              <span
+                className={`absolute right-4 top-2 rounded-full px-3 py-1 font-semibold ${
+                  item.status === "active"
+                    ? "bg-blue-500 text-white"
+                    : "bg-yellow-500 text-black"
+                }`}
+              >
+                {item.status.toUpperCase()}
+              </span>
               <img
                 src={item.image}
                 alt={item.title}
@@ -313,21 +395,42 @@ export default function ProfilePage() {
                 <p className="mb-2 text-lg text-gray-700">
                   Price: ${item.price}
                 </p>
-                <hr className="my-2" />
+
                 <div className="flex gap-2">
-                  <button className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200">
+                  <button
+                    className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+                    onClick={() => navigate(`/item/${item.item_id}`)}
+                  >
                     View
                   </button>
-                  <button className="rounded-full px-4 py-1 font-semibold text-red-800 transition duration-200 ease-in-out hover:bg-slate-200">
+                  <button
+                    className="rounded-full px-4 py-1 font-semibold text-red-800 transition duration-200 ease-in-out hover:bg-slate-200"
+                    onClick={() => handleRemoveListing(item)}
+                  >
                     Remove
                   </button>
+                  {item.status === "pending" && (
+                    <div className="flex">
+                      <button
+                        className="rounded-full px-6 py-1 font-semibold text-green-800 transition duration-200 ease-in-out hover:bg-slate-200"
+                        onClick={() => handleApproveListing(item.item_id)}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        className="rounded-full px-6 py-1 font-semibold text-red-800 transition duration-200 ease-in-out hover:bg-slate-200"
+                        onClick={() => handleRejectListing(item.item_id)}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           ))}
       </div>
 
-      {/* Sold Items Section */}
       <div className="mb-2 flex items-center justify-between">
         <button
           onClick={() => {
@@ -346,101 +449,135 @@ export default function ProfilePage() {
           showSoldProducts ? "max-h-fit opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        {userListings
-          .filter((item) => item.status == "sold")
-          .map((item) => (
+        {userTransactions
+          ?.filter((tx) => ["sold"].includes(tx.listings?.status))
+          .map((tx) => (
             <div
-              key={item.item_id}
+              key={tx.transaction_id}
               className="relative mb-4 flex items-center gap-4 rounded-lg p-4 shadow-md"
             >
-              <span className="absolute right-4 top-2 rounded-full px-3 py-1 font-semibold">
-                SOLD
+              <span
+                className={`absolute right-4 top-2 rounded-full px-3 py-1 font-semibold ${
+                  tx.listings.status === "sold"
+                    ? "bg-red-500 text-white"
+                    : "bg-yellow-500 text-black"
+                }`}
+              >
+                {tx.listings.status.toUpperCase()}
               </span>
               <img
-                src={item.image}
-                alt={item.title}
+                src={tx.listings.image}
+                alt={tx.listings.title}
                 className="h-32 w-32 rounded-lg object-cover"
               />
               <div className="flex-1">
-                <h3 className="text-2xl font-bold">{item.title}</h3>
+                <h3 className="text-2xl font-bold">{tx.listings.title}</h3>
                 <p className="mb-2 text-lg text-gray-700">
-                  Price: ${item.price}
+                  Price: ${tx.listings.price}
                 </p>
                 <hr className="my-2" />
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex gap-2">
-                    <button className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200">
-                      View
+                    <button
+                      className="rounded-full px-6 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+                      onClick={() => navigate(`/item/${tx.item_id}`)}
+                    >
+                      View Item
                     </button>
-                    <button className="rounded-full px-4 py-1 font-semibold text-red-800 transition duration-200 ease-in-out hover:bg-slate-200">
-                      Remove
-                    </button>
+                    {!tx.rated && (
+                      <button
+                        className="rounded-full px-4 py-1 font-semibold text-[#246fb6] transition duration-200 ease-in-out hover:bg-slate-200"
+                        onClick={() => {
+                          setShowRate(true);
+                          setSelectedItem(tx);
+                        }}
+                      >
+                        Rate Transaction
+                      </button>
+                    )}
                   </div>
-                  <button
-                    className="rounded-full px-4 py-1 font-semibold transition duration-200 ease-in-out hover:bg-slate-200"
-                    onClick={() => {
-                      setShowRate(true);
-                      setSelectedItem(item);
-                    }}
-                  >
-                    Rate
-                  </button>
                 </div>
               </div>
             </div>
           ))}
       </div>
+
       {showRate && selectedItem && userTransactions && (
         <Rating
           buyerID={
             userTransactions
               .filter(
-                (transaction) => transaction.item_id == selectedItem.item_id,
+                (transaction) => transaction.item_id === selectedItem.item_id,
               )
               .find((transaction) => transaction.buyer_id)?.buyer_id
           }
-          img={selectedItem.image}
+          transactionID={
+            userTransactions
+              .filter(
+                (transaction) => transaction.item_id == selectedItem.item_id,
+              )
+              .find((transaction) => transaction.buyer_id)?.transaction_id
+          }
+          img={selectedItem.listings.image}
           toggleRateForm={setShowRate}
+          onRatingCompleted={handleRatingCompleted} // Pass callback
         />
       )}
 
-      {/* Edit Profile Window
-      <EditProfile
-        isOpen={isEditProfileOpen}
-        onClose={() => setIsEditProfileOpen(false)}
-        userData={{
-          name: userData.username,
-          email: userData.email,
-          username: userData.username,
-          profilePicture: userData.profilePicture || "",
-        }}
-        onUpdate={(updatedData) => {
-          setUserData((prev) => (prev ? { ...prev, ...updatedData } : prev));
-        }}
-      />
+      {isTerminationModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+            <h2 className="mb-4 text-center text-2xl font-bold">
+              Confirm Account Termination
+            </h2>
+            <p className="mb-6 text-center text-gray-600">
+              Are you sure you want to terminate your account? This action is
+              irreversible.
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setIsTerminationModalOpen(false)}
+                className="rounded-full border border-gray-500 px-6 py-2 text-gray-500 transition hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  handleTerminationRequest();
+                  setIsTerminationModalOpen(false);
+                  setShowGoodbyeMessage(true);
+                  setTimeout(() => setShowGoodbyeMessage(false), 3000);
+                }}
+                className="rounded-full bg-red-400 px-6 py-2 text-white transition hover:bg-red-600"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Add Funds Modal */}
-                
+      {showGoodbyeMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 text-center shadow-lg">
+            <h2 className="text-2xl font-bold text-gray-800">
+              We have submitted your request! We are sorry to see you leave
+              us...
+            </h2>
+          </div>
+        </div>
+      )}
+
       <AddFunds
         isOpen={isAddFundsOpen}
         onClose={() => {
           setIsAddFundsOpen(false);
-          setClientSecret(null); // Reset clientSecret for next transaction
+          setClientSecret(null);
         }}
         clientSecret={clientSecret}
         onPaymentSuccess={handlePaymentSuccess}
         onRequestPayment={handleOpenAddFunds}
-      /> 
-
-      {/* Logout Button
-      <button
-        className="mt-6 rounded-full bg-red-800 px-4 py-2 font-semibold text-white hover:opacity-70"
-        onClick={() =>
-          logout({ logoutParams: { returnTo: window.location.origin } })
-        }
-      >
-        Log Out
-      </button> */}
+      />
     </div>
   );
 }

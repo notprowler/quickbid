@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { getListing } from "../api/listingsApi";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
 
 // -------------------- Product Interface --------------------
 interface Product {
@@ -10,7 +10,10 @@ interface Product {
   description: string;
   image: string;
   category: string;
+  status: string;
+  created_at: string;
   type: "sell" | "bid";
+  owner_id: number;
 }
 
 // -------------------- Review Interface --------------------
@@ -52,11 +55,44 @@ const reviews: Review[] = [
 ];
 
 // -------------------- ProductSell Component --------------------
-export function ProductSell({ productDetails }: { productDetails: Product }) {
-  const handlePurchase = () => {
-    alert(
-      `You have purchased ${productDetails.title} for $${productDetails.price}!`,
-    );
+export function ProductSell({
+  productDetails,
+}: {
+  productDetails: Product | undefined;
+}) {
+  const navigate = useNavigate();
+
+  const handlePurchase = async () => {
+    try {
+      if (!productDetails) return;
+
+      const transactionPayload = {
+        seller_id: productDetails.owner_id, // Seller ID
+        item_id: productDetails.item_id, // Item ID
+        transaction_amount: productDetails.price, // Transaction Amount
+      };
+
+      const response = await axios.post(
+        "http://localhost:3000/api/transactions/buy",
+        transactionPayload,
+        { withCredentials: true },
+      );
+
+      if (response.status === 200 || response.status === 204) {
+        alert(
+          "Successfully placed order. The seller will either approve or deny your order. Check your profile for the latest updates on this order.",
+        );
+      } else {
+        alert("Purchase failed.");
+      }
+    } catch (e: any) {
+      if (e.response) {
+        console.error("API Error:", e.response.data.error);
+        alert("Please be a active user to purchase this product");
+      } else if (e.request) {
+        console.error("No response from server:", e.request);
+      }
+    }
   };
 
   return (
@@ -64,28 +100,44 @@ export function ProductSell({ productDetails }: { productDetails: Product }) {
       <div className="flex items-center justify-center">
         <div className="relative aspect-square w-full rounded-lg bg-gray-200">
           <img
-            src={productDetails.image || "/placeholder-image.jpg"} // Placeholder if no image
-            alt={productDetails.title}
+            src={productDetails?.image || "/placeholder-image.jpg"} // Placeholder if no image
+            alt={productDetails?.title}
             className="h-full w-full rounded-lg object-cover"
           />
         </div>
       </div>
       <div className="flex flex-col space-y-4">
-        <h1 className="text-2xl font-bold">{productDetails.title}</h1>
+        <h1 className="text-2xl font-bold">{productDetails?.title}</h1>
         <div className="text-4xl font-bold text-gray-800">
-          ${productDetails.price}
+          ${productDetails?.price}
         </div>
-        <button
-          onClick={handlePurchase}
-          className="duration:200 rounded-lg bg-[#3A5B22] px-4 py-2 text-white transition ease-in-out hover:bg-[#2F4A1A]"
-        >
-          Buy Now
-        </button>
+        {productDetails?.status === "pending" ? (
+          <button
+            disabled
+            className="duration:200 cursor-not-allowed rounded-lg bg-yellow-500 px-4 py-2 text-white transition ease-in-out"
+          >
+            Pending Approval
+          </button>
+        ) : productDetails?.status === "active" ? (
+          <button
+            onClick={handlePurchase}
+            className="duration:200 rounded-lg bg-[#3A5B22] px-4 py-2 text-white transition ease-in-out hover:bg-[#2F4A1A]"
+          >
+            Buy Now
+          </button>
+        ) : (
+          <button
+            disabled
+            className="duration:200 cursor-not-allowed rounded-lg bg-rose-800 px-4 py-2 text-white transition ease-in-out"
+          >
+            Sold
+          </button>
+        )}
         <details className="rounded-lg border border-gray-300 p-4">
           <summary className="cursor-pointer font-semibold">
             Description
           </summary>
-          <p className="mt-2 text-gray-600">{productDetails.description}</p>
+          <p className="mt-2 text-gray-600">{productDetails?.description}</p>
         </details>
       </div>
     </div>
@@ -97,12 +149,27 @@ export function ProductBid({ productDetails }: { productDetails: Product }) {
   const [currentBid, setCurrentBid] = useState(productDetails.price);
   const [newBid, setNewBid] = useState("");
 
-  const handleBid = () => {
+  const handleBid = async () => {
     const bidValue = parseFloat(newBid);
     if (bidValue > currentBid) {
-      setCurrentBid(bidValue);
-      alert(`Your bid of $${bidValue} has been placed!`);
-      setNewBid("");
+      try {
+        const response = await axios.post(
+          `http://localhost:3000/api/bids/place/${productDetails.item_id}`,
+          { bidValue },
+          { withCredentials: true }
+        );
+
+        if (response.status === 200) {
+          setCurrentBid(bidValue);
+          alert(`Your bid of $${bidValue} has been placed!`);
+          setNewBid("");
+        } else {
+          alert("Failed to place bid.");
+        }
+      } catch (error) {
+        console.error("Bid error:", error);
+        alert("Please login in order to place a bid.");
+      }
     } else {
       alert("Your bid must be higher than the current bid.");
     }
@@ -169,36 +236,41 @@ export function ReviewBox({ review }: { review: Review }) {
 
 // -------------------- ProductPage Component --------------------
 export default function ProductPage() {
-  const { itemID } = useParams<{ itemID: string }>();
+  const { id } = useParams();
   const [productDetails, setProductDetails] = useState<Product | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        if (itemID) {
-          const data = await getListing(itemID!);
-          setProductDetails(data);
+        if (id) {
+          const res = await axios.get(
+            `http://localhost:3000/api/listings/product/${id}`,
+            {
+              withCredentials: true,
+            },
+          );
+
+          if (!res.data) {
+            throw new Error();
+          }
+          console.log("Product Page", res.data);
+
+          setProductDetails(res.data);
         }
       } catch (err) {
-        setError("Failed to load product details.");
-      } finally {
-        setLoading(false);
+        setError("Failed to load product details");
       }
     };
-    if (itemID) {
-      fetchProduct();
-    }
-  }, [itemID]);
+    fetchProduct();
+  }, [id]);
 
-  if (loading) return <div>Loading product details...</div>;
   if (error) return <div>{error}</div>;
-  if (!productDetails) return <div>Product not found.</div>;
+  if (!productDetails) return <div>Loading product details...</div>;
 
   return (
     <div className="min-h-screen bg-white p-4">
-      {productDetails.type === "sell" ? (
+      {productDetails?.type === "sell" ? (
         <ProductSell productDetails={productDetails} />
       ) : (
         <ProductBid productDetails={productDetails} />

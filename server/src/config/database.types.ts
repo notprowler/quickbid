@@ -40,7 +40,7 @@ export type Database = {
           bid_deadline: string
           bid_id: number
           bid_status: Database["public"]["Enums"]["bid_status"]
-          bidder_id: number
+          bidder_id: number | null
           created_at: string
           item_id: number
           updated_at: string | null
@@ -50,7 +50,7 @@ export type Database = {
           bid_deadline: string
           bid_id?: number
           bid_status: Database["public"]["Enums"]["bid_status"]
-          bidder_id: number
+          bidder_id?: number | null
           created_at?: string
           item_id: number
           updated_at?: string | null
@@ -60,7 +60,7 @@ export type Database = {
           bid_deadline?: string
           bid_id?: number
           bid_status?: Database["public"]["Enums"]["bid_status"]
-          bidder_id?: number
+          bidder_id?: number | null
           created_at?: string
           item_id?: number
           updated_at?: string | null
@@ -113,39 +113,61 @@ export type Database = {
       }
       complaints: {
         Row: {
-          complaint_id: number
+          buyer_id: number
           complaints: string
+          complaints_id: number
           created_at: string
-          status: Database["public"]["Enums"]["complaints_status"]
-          user_id: number
+          seller_id: number
+          status: string
+          transaction_id: number
         }
         Insert: {
-          complaint_id?: number
-          complaints: string
+          buyer_id: number
+          complaints?: string
+          complaints_id?: number
           created_at?: string
-          status: Database["public"]["Enums"]["complaints_status"]
-          user_id: number
+          seller_id: number
+          status: string
+          transaction_id: number
         }
         Update: {
-          complaint_id?: number
+          buyer_id?: number
           complaints?: string
+          complaints_id?: number
           created_at?: string
-          status?: Database["public"]["Enums"]["complaints_status"]
-          user_id?: number
+          seller_id?: number
+          status?: string
+          transaction_id?: number
         }
         Relationships: [
           {
-            foreignKeyName: "complaints_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "complaints_buyer_id_fkey"
+            columns: ["buyer_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "complaints_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "complaints_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["transaction_id"]
           },
         ]
       }
       listings: {
         Row: {
+          bid_deadline: string | null
           category: string | null
+          comments: string[] | null
           created_at: string
           description: string
           image: string[] | null
@@ -157,7 +179,9 @@ export type Database = {
           type: string
         }
         Insert: {
+          bid_deadline?: string | null
           category?: string | null
+          comments?: string[] | null
           created_at?: string
           description: string
           image?: string[] | null
@@ -169,7 +193,9 @@ export type Database = {
           type: string
         }
         Update: {
+          bid_deadline?: string | null
           category?: string | null
+          comments?: string[] | null
           created_at?: string
           description?: string
           image?: string[] | null
@@ -198,7 +224,7 @@ export type Database = {
           full_name: string
           id: number
           password_hash: string
-          status: string | null
+          status: string
           username: string
         }
         Insert: {
@@ -208,7 +234,7 @@ export type Database = {
           full_name: string
           id?: number
           password_hash: string
-          status?: string | null
+          status?: string
           username: string
         }
         Update: {
@@ -218,7 +244,7 @@ export type Database = {
           full_name?: string
           id?: number
           password_hash?: string
-          status?: string | null
+          status?: string
           username?: string
         }
         Relationships: []
@@ -270,7 +296,9 @@ export type Database = {
           created_at: string
           discount_applied: boolean
           item_id: number
+          rated: boolean | null
           seller_id: number
+          status: string
           transaction_amount: number
           transaction_id: number
         }
@@ -279,7 +307,9 @@ export type Database = {
           created_at?: string
           discount_applied: boolean
           item_id: number
+          rated?: boolean | null
           seller_id: number
+          status?: string
           transaction_amount: number
           transaction_id?: number
         }
@@ -288,7 +318,9 @@ export type Database = {
           created_at?: string
           discount_applied?: boolean
           item_id?: number
+          rated?: boolean | null
           seller_id?: number
+          status?: string
           transaction_amount?: number
           transaction_id?: number
         }
@@ -327,6 +359,8 @@ export type Database = {
           password_hash: string
           role: string
           status: string
+          suspension_count: number | null
+          termination_request: boolean | null
           user_id: number
           username: string
           vip: boolean
@@ -341,6 +375,8 @@ export type Database = {
           password_hash: string
           role?: string
           status?: string
+          suspension_count?: number | null
+          termination_request?: boolean | null
           user_id?: number
           username: string
           vip: boolean
@@ -355,6 +391,8 @@ export type Database = {
           password_hash?: string
           role?: string
           status?: string
+          suspension_count?: number | null
+          termination_request?: boolean | null
           user_id?: number
           username?: string
           vip?: boolean

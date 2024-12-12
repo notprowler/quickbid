@@ -1,22 +1,42 @@
-import { FaUser, FaShoppingCart, FaTimes, FaBars } from "react-icons/fa";
-import { useState } from "react";
+import {
+  FaUser,
+  FaShoppingCart,
+  FaTimes,
+  FaBars,
+  FaPlus,
+
+} from "react-icons/fa";
+import { IoLogOut } from "react-icons/io5";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import axios from "axios";
 
 export default function Navbar() {
   const [cartCount, setCartCount] = useState<number>(0);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [isSuperUser, setIsSuperUser] = useState<boolean>(false); // Track super-user role
   const navigate = useNavigate();
-  const { authenticated, loading } = useAuth();
+  const { authenticated, loading, user } = useAuth();
 
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user?.role === "Admin") {
+      setIsSuperUser(true);
+    }
+  }, [user]);
 
   const handleCartClick = () => {
     navigate("/cart");
   };
 
+  const handlePlusClick = () => {
+    navigate("/create");
+  };
+
   const handleAvatarClick = () => {
-    if (loading) return; // Wait for the authentication state to load
+    if (loading) return;
     if (authenticated) {
       navigate("/profile");
     } else {
@@ -27,6 +47,24 @@ export default function Navbar() {
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
+
+  const handleLogoutClick = async (): Promise<void> => {
+    try {
+      const res = await axios.post(
+        "http://localhost:3000/auth/logout", {},
+        { withCredentials: true },
+      );
+
+      if (!res.data) { throw new Error; }
+
+      navigate("/");
+      window.location.reload();
+    } catch (e) {
+      if (e instanceof Error) {
+        console.error(`${e.message}`);
+      }
+    }
+  }
 
   return (
     <nav className="flex items-center justify-between border-b-2 border-solid px-6 py-4 font-imprima">
@@ -42,6 +80,14 @@ export default function Navbar() {
         >
           Listings
         </a>
+        {isSuperUser && (
+          <a
+            href="/admin"
+            className="rounded-lg px-2 py-1 transition duration-200 ease-in-out hover:bg-gray-300"
+          >
+            Admin Panel
+          </a>
+        )}
       </div>
 
       {/* menu layout for smaller screens */}
@@ -49,12 +95,21 @@ export default function Navbar() {
         <div className="absolute left-0 top-16 w-full bg-white shadow-lg md:hidden">
           <div className="flex flex-col items-center space-y-4 py-4">
             <a
-              href="/"
+              href="/listings"
               className="w-fit rounded-lg px-2 py-1 text-xl transition duration-200 ease-in-out hover:bg-gray-300"
               onClick={toggleMenu}
             >
               Listings
             </a>
+            {isSuperUser && (
+              <a
+                href="/admin"
+                className="w-fit rounded-lg px-2 py-1 text-xl transition duration-200 ease-in-out hover:bg-gray-300"
+                onClick={toggleMenu}
+              >
+                Admin Panel
+              </a>
+            )}
           </div>
         </div>
       )}
@@ -67,6 +122,13 @@ export default function Navbar() {
           aria-label="Toggle Menu"
         >
           {menuOpen ? <FaTimes /> : <FaBars />}
+        </button>
+
+        <button
+          onClick={handlePlusClick}
+          className="relative flex h-10 w-10 items-center justify-center rounded-full transition duration-200 ease-in-out hover:-translate-y-1"
+        >
+          <FaPlus className="text-2xl" />
         </button>
 
         <button
@@ -94,7 +156,18 @@ export default function Navbar() {
           ) : (
             <FaUser className="text-2xl" />
           )}
+
         </button>
+        {
+          authenticated &&
+          <button
+            onClick={handleLogoutClick}
+            className="flex h-10 w-10 items-center justify-center rounded-full transition duration-200 ease-in-out hover:-translate-y-1"
+            aria-label="Logout"
+          >
+            <IoLogOut className="text-2xl" />
+          </button>
+        }
       </div>
     </nav>
   );

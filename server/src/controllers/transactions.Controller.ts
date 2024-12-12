@@ -1,6 +1,4 @@
-import { RequestHandler } from "express";
 import supabase from "@/config/database";
-
 import type { Request, RequestHandler, Response } from "express";
 
 const newTransaction: RequestHandler = async (req: Request, res: Response) => {
@@ -32,14 +30,14 @@ const newTransaction: RequestHandler = async (req: Request, res: Response) => {
   }
 };
 
-const getTransactionsForBuyer: RequestHandler = async (
+const getTransactionsForCart: RequestHandler = async (
   req: Request,
   res: Response
 ) => {
-  const { id } = req.params;
+  const userId = req.user?.user_id;
 
-  if (!id) {
-    res.status(400).json({ error: "Please provide a User ID" });
+  if (!userId) {
+    res.status(400).json({ error: "Unauthorized User" });
     return;
   }
 
@@ -48,7 +46,7 @@ const getTransactionsForBuyer: RequestHandler = async (
       .from("transactions")
       .select(`*, listings("*")`)
       .order("created_at", { ascending: false })
-      .eq("buyer_id", id);
+      .eq("buyer_id", userId);
 
     if (error) throw error;
 
@@ -62,23 +60,112 @@ const getTransactionsForBuyer: RequestHandler = async (
   }
 };
 
-const getTransactionsForSeller: RequestHandler = async (
-  req: Request,
-  res: Response
-) => {
-  const { id } = req.params;
+const getTransactionsForProfile: RequestHandler = async (req, res) => {
+  const userId = req.user?.user_id;
+  console.log(userId);
 
-  if (!id) {
-    res.status(400).json({ error: "Please provide a User ID" });
+  if (!userId) {
+    res.status(400).json({ error: "Unauthorized User" });
     return;
   }
 
   try {
     const { data, error } = await supabase
       .from("transactions")
-      .select("*")
+      .select(`*, listings(*)`)
       .order("created_at", { ascending: false })
-      .eq("seller_id", id);
+      .eq("seller_id", userId)
+      .in("listings.status", ["sold", "pending"]); // Include pending status
+
+    if (error) throw error;
+
+    res.status(200).json(data);
+  } catch (e) {
+    console.error("Error fetching transactions for profile:", e);
+    res
+      .status(500)
+      .json({ error: "Failed to fetch transactions for profile." });
+  }
+};
+
+const getTransactionsForBuyer: RequestHandler = async (req, res) => {
+  const userId = req.user?.user_id;
+
+  if (!userId) {
+    res.status(400).json({ error: "Unauthorized User" });
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("transactions")
+      .select(`*, listings(*)`)
+      .order("created_at", { ascending: false })
+      .eq("buyer_id", userId)
+      .in("listings.status", ["sold", "pending"]); // Include pending status
+
+    if (error) throw error;
+
+    res.status(200).json(data);
+  } catch (e) {
+    console.error("Error fetching transactions for buyer:", e);
+    res.status(500).json({ error: "Failed to fetch transactions for buyer." });
+  }
+};
+
+/* updating the buyer rating, from user as seller perspective sets rated to true where seller_id is the user */
+const ProfileRatingSubmitted: RequestHandler = async (
+  req: Request,
+  res: Response
+) => {
+  const userId = req.user?.user_id;
+
+  if (!userId) {
+    res.status(400).json({ error: "Unauthorized User" });
+    return;
+  }
+
+  const { transaction_id, rated } = req.body;
+
+  try {
+    const { data, error } = await supabase
+      .from("transactions")
+      .update({ rated: rated })
+      .eq("seller_id", userId)
+      .eq("transaction_id", transaction_id);
+
+    if (error) throw error;
+
+    res.status(200).json(data);
+  } catch (e) {
+    if (e instanceof Error) {
+      res.status(500).json({ error: `${e.message}` });
+    } else if (typeof e === "object" && e !== null && "message" in e) {
+      res.status(500).json({ error: `${e.message}` });
+    }
+  }
+};
+
+/* updating the seller rating, from user as buyer perspective sets rated to true where buyer_id is the user */
+const CartRatingSubmitted: RequestHandler = async (
+  req: Request,
+  res: Response
+) => {
+  const userId = req.user?.user_id;
+
+  if (!userId) {
+    res.status(400).json({ error: "Unauthorized User" });
+    return;
+  }
+
+  const { transaction_id, rated } = req.body;
+
+  try {
+    const { data, error } = await supabase
+      .from("transactions")
+      .update({ rated: rated })
+      .eq("buyer_id", userId)
+      .eq("transaction_id", transaction_id);
 
     if (error) throw error;
 
@@ -93,7 +180,8 @@ const getTransactionsForSeller: RequestHandler = async (
 };
 
 const createTransaction: RequestHandler = async (req, res) => {
-  const { buyer_id, seller_id, item_id, transaction_amount, is_vip } = req.body;
+  const buyer_id = req.user?.user_id; // Get buyer ID from authenticated user's session
+  const { seller_id, item_id, transaction_amount } = req.body;
 
   if (!buyer_id || !seller_id || !item_id || !transaction_amount) {
     res.status(400).json({ error: "All fields are required." });
@@ -101,84 +189,50 @@ const createTransaction: RequestHandler = async (req, res) => {
   }
 
   try {
-    const { data: buyerData, error: buyerError } = await supabase
-      .from("users")
-      .select("balance, vip")
-      .eq("user_id", buyer_id)
-      .single();
-
-    if (buyerError || !buyerData) {
-      res.status(404).json({ error: "Buyer not found." });
-      return;
-    }
-
-    const { balance: buyerBalance, vip } = buyerData;
-
-    const { data: sellerData, error: sellerError } = await supabase
-      .from("users")
-      .select("balance")
-      .eq("user_id", seller_id)
-      .single();
-
-    if (sellerError || !sellerData) {
-      res.status(404).json({ error: "Seller not found." });
-      return;
-    }
-
-    const { balance: sellerBalance } = sellerData;
-
-    const discountApplied = is_vip && vip;
-    const finalAmount = discountApplied
-      ? transaction_amount * 0.85
-      : transaction_amount;
-
-    if (buyerBalance < finalAmount) {
-      res.status(400).json({ error: "Insufficient balance." });
-      return;
-    }
-
-    const { error: buyerUpdateError } = await supabase
-      .from("users")
-      .update({ balance: buyerBalance - finalAmount })
-      .eq("user_id", buyer_id);
-
-    if (buyerUpdateError) {
-      throw new Error("Failed to update buyer's balance.");
-    }
-
-    const { error: sellerUpdateError } = await supabase
-      .from("users")
-      .update({ balance: sellerBalance + finalAmount })
-      .eq("user_id", seller_id);
-
-    if (sellerUpdateError) {
-      throw new Error("Failed to update seller's balance.");
-    }
-
-    const { error: transactionError } = await supabase
+    // Create a pending transaction
+    const { data, error: transactionError } = await supabase
       .from("transactions")
-      .insert({
-        buyer_id,
-        seller_id,
-        item_id,
-        transaction_amount: finalAmount,
-        discount_applied: discountApplied,
-      });
+      .insert([
+        {
+          buyer_id,
+          seller_id,
+          item_id,
+          transaction_amount,
+          discount_applied: false, // Set as false initially, calculate later if required
+        },
+      ])
+      .select();
 
     if (transactionError) {
-      throw new Error("Failed to log transaction.");
+      throw new Error(transactionError.message);
     }
 
-    res.status(201).json({ message: "Transaction successful." });
+    // Update the listing to pending status
+    const { error: listingUpdateError } = await supabase
+      .from("listings")
+      .update({ status: "pending" })
+      .eq("item_id", item_id);
+
+    if (listingUpdateError) {
+      throw new Error("Failed to update listing status.");
+    }
+
+    res.status(200).json({
+      message: "Transaction created and listing marked as pending.",
+      transaction: data,
+    });
   } catch (error) {
-    console.error("Error processing transaction:", error);
-    res.status(500).json({ error: "Failed to process transaction." });
+    console.error("Error creating transaction:", error);
+    res.status(500).json({ error: "Failed to create transaction." });
   }
 };
 
-export default {
+export {
   newTransaction,
-  getTransactionsForBuyer,
-  getTransactionsForSeller,
+  getTransactionsForCart,
+  getTransactionsForProfile,
   createTransaction,
+  CartRatingSubmitted,
+  ProfileRatingSubmitted,
+  getTransactionsForBuyer,
 };

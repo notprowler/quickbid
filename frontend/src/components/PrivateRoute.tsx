@@ -13,5 +13,5 @@ export default function PrivateRoute({ children }: PrivateRouteProps) {
 
   if (loading) return <div>Loading...</div>;
 
-  return authenticated ? children : <Navigate to="/" />;
+  return authenticated ? children : <Navigate to="/login" />;
 }
