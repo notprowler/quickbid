@@ -7,7 +7,6 @@ const CreateListing: React.FC = () => {
   const [type, setType] = useState("sell");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
-  const [ownerId, setOwnerId] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
   const [deadline, setDeadline] = useState("");
@@ -56,7 +55,7 @@ const CreateListing: React.FC = () => {
       setType("sell");
       setPrice("");
       setCategory("");
-      setOwnerId("");
+      // setOwnerId(""); This is not the way we are identifying the user, we use JWT cookies 
       setImages([]);
 
       // Clear success message after 3 seconds

@@ -51,7 +51,6 @@ const validateAccessToken = (
     }
 
   } catch (err) {
-    console.error("JWT Verification Error:", err);
     res.status(401).json({ error: "Invalid or expired token" });
   }
 };

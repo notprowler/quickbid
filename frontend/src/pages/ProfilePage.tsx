@@ -52,7 +52,8 @@ export default function ProfilePage() {
   >(null);
   const [showSoldProducts, setShowSoldProducts] = useState(false);
 
-  const [buyerTransactions, setBuyerTransactions] = useState<
+  
+  const [_buyerTransactions, setBuyerTransactions] = useState<
     UserTransactions[] | null
   >(null);
 

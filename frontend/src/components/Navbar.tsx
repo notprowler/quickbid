@@ -13,13 +13,13 @@ import { useAuth } from "../hooks/useAuth";
 import axios from "axios";
 
 export default function Navbar() {
-  const [cartCount, setCartCount] = useState<number>(0);
+  const [cartCount] = useState<number>(0);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [isSuperUser, setIsSuperUser] = useState<boolean>(false); // Track super-user role
   const navigate = useNavigate();
   const { authenticated, loading, user } = useAuth();
 
-  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [userAvatar] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.role === "Admin") {
