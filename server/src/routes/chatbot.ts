@@ -54,7 +54,7 @@ async function geminiChat(userMessage: string) {
       {
         role: "model",
         parts: [
-          {
+          { 
             text: `Here are the current listings: ${listingsText}`,
           },
         ],

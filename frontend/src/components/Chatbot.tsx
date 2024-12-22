@@ -32,7 +32,7 @@ const Chatbot: React.FC = () => {
     if (!input.trim()) return;
 
     setLoading(true);
-    const newConversation = [...conversation, { role: 'user', text: input }];
+    const newConversation: Conversation[] = [...conversation, { role: 'user', text: input }];
     setConversation(newConversation);
 
     try {
@@ -42,9 +42,10 @@ const Chatbot: React.FC = () => {
       console.log('AI Response:' , response.data);
 
       // Format the AI response
-   if (response.data && response.data.response) {
+      if (response.data && response.data.response) {
         // Add AI response to conversation with the correct role
-        setConversation([...newConversation, { role: 'model', text: response.data.response }]);
+        const formattedResponse = formatResponse(response.data.response);
+        setConversation([...newConversation, { role: 'model', text: formattedResponse }]);
       } else {
         console.error('Invalid response format:', response.data);
       }

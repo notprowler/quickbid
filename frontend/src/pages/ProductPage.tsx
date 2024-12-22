@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 
 // -------------------- Product Interface --------------------
@@ -61,7 +61,6 @@ export function ProductSell({
 }: {
   productDetails: Product | undefined;
 }) {
-  const navigate = useNavigate();
 
   const handlePurchase = async () => {
     try {

@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
-import { CiStar } from "react-icons/ci";
 import { FaRegStar } from "react-icons/fa6";
 
 interface RateProps {
@@ -161,7 +159,7 @@ const Rating: React.FC<RateProps> = ({
         <div className="mb-4 flex justify-center">
           {Array(5)
             .fill(0)
-            .map((star, i) => (
+            .map((i) => (
               <FaRegStar
                 key={i}
                 className={`w-30 cursor-pointer ${i <= rating ? "text-yellow-400" : "bg-white"}`}
