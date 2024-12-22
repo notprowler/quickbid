@@ -1,0 +1,42 @@
+{
+    "version": 2,
+    "builds": [{"src": "src/index.ts", "use": "@vercel/node"}],
+    "routes": [
+    {
+      "src": "/api/listings/(.*)",
+      "dest": "/api/listings"
+    },
+    {
+      "src": "/api/users/(.*)",
+      "dest": "/api/users"
+    },
+    {
+      "src": "/api/bids/(.*)",
+      "dest": "/api/bids"
+    },
+    {
+      "src": "/api/transactions/(.*)",
+      "dest": "/api/transactions"
+    },
+    {
+      "src": "/auth/(.*)",
+      "dest": "/auth"
+    },
+    {
+      "src": "/api/visitors/register/(.*)",
+      "dest": "/api/visitors/register"
+    },
+    {
+      "src": "/api/payments/(.*)",
+      "dest": "/api/payments"
+    },
+    {
+      "src": "/api/chatbot/(.*)",
+      "dest": "/api/chatbot"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "src/index.js"
+    }
+  ]
+}
